@@ -153,3 +153,73 @@ Save the file and restart the SSH service to apply the changes.
 ```bash
 sudo systemctl restart ssh
 ```
+
+### Storage expansion
+
+When you install Ubuntu Server, the installer uses [Logical Volume Management](https://ubuntu.com/server/docs/explanation/storage/about-lvm/) (LVM) by default. It often leaves a large portion of your drive unallocated instead of giving all the space to your main operating system partition. You want to make sure your server can actually use your entire SSD.
+
+First, check your current disk usage to see how much space is currently allocated:
+
+```bash
+df -h
+```
+
+Your output will look something like this:
+
+```text
+Filesystem                         Size  Used Avail Use% Mounted on
+tmpfs                              782M  1.5M  780M   1% /run
+efivarfs                           320K   78K  238K  25% /sys/firmware/efi/efivars
+/dev/mapper/ubuntu--vg-ubuntu--lv   98G  6.6G   87G   8% /
+tmpfs                              3.9G     0  3.9G   0% /dev/shm
+tmpfs                              5.0M     0  5.0M   0% /run/lock
+/dev/nvme0n1p2                     2.0G  103M  1.7G   6% /boot
+/dev/nvme0n1p1                     1.1G  6.2M  1.1G   1% /boot/efi
+tmpfs                              782M   12K  782M   1% /run/user/1000
+```
+
+Notice that the filesystem mounted on `/` (`/dev/mapper/ubuntu--vg-ubuntu--lv`) only has `98G` allocated, even though the machine has a 256GB NVMe SSD.
+
+To fix this, run this command to expand the logical volume to use 100% of the free space available:
+
+```bash
+sudo lvextend -l +100%FREE /dev/ubuntu-vg/ubuntu-lv
+```
+
+The output will confirm that the logical volume size has increased:
+
+```text
+Size of logical volume ubuntu-vg/ubuntu-lv changed from 100.00 GiB (25600 extents) to 235.42 GiB (60268 extents).
+Logical volume ubuntu-vg/ubuntu-lv successfully resized.
+```
+
+Even though the volume is larger, the filesystem does not know about the new space yet. You need to resize it to match the volume:
+
+```bash
+sudo resize2fs /dev/ubuntu-vg/ubuntu-lv
+```
+
+You will see a confirmation like this:
+
+```text
+resize2fs 1.47.0 (5-Feb-2023)
+Filesystem at /dev/ubuntu-vg/ubuntu-lv is mounted on /; on-line resizing required
+old_desc_blocks = 13, new_desc_blocks = 30
+The filesystem on /dev/ubuntu-vg/ubuntu-lv is now 61714432 (4k) blocks long.
+```
+
+Finally, run `df -h` one more time to confirm that your root partition (`/`) now has access to the full capacity of your SSD:
+
+```text
+Filesystem                         Size  Used Avail Use% Mounted on
+tmpfs                              782M  1.5M  780M   1% /run
+efivarfs                           320K   78K  238K  25% /sys/firmware/efi/efivars
+/dev/mapper/ubuntu--vg-ubuntu--lv  232G  6.6G  215G   3% /
+tmpfs                              3.9G     0  3.9G   0% /dev/shm
+tmpfs                              5.0M     0  5.0M   0% /run/lock
+/dev/nvme0n1p2                     2.0G  103M  1.7G   6% /boot
+/dev/nvme0n1p1                     1.1G  6.2M  1.1G   1% /boot/efi
+tmpfs                              782M   12K  782M   1% /run/user/1000
+```
+
+The root partition size is now `232G`, which confirms the expansion was successful.
