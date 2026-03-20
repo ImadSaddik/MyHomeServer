@@ -33,7 +33,7 @@ You should see an output containing `PRETTY_NAME="Ubuntu 24.04.4 LTS"`. This con
 
 ## Core system configuration
 
-After installing Ubuntu server, there are some core system configurations that you should do before hosting any services. These configurations will ensure that your server is properly set up and ready to run applications.
+After installing Ubuntu Server, there are a few core system configurations you should complete before hosting any services. These initial steps ensure your server is secure, stable, and ready to run applications smoothly.
 
 ### Network configuration
 
