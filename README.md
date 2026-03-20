@@ -16,7 +16,7 @@ I bought this mini PC and upgraded the RAM so it can comfortably run multiple Do
 | :--- | :--- | :--- |
 | **Base unit** | Lenovo ThinkCentre M720Q Tiny (Intel core i3-9100T, 256GB NVMe SSD, and 8GB DDR4) | 1350 DH |
 | **RAM upgrade** | 32GB DDR4 (bought after trading in the original 8GB stick) | 850 DH |
-| **Total cost** | | **2200 DH (~$235)** |
+| **Total cost** | | **2200 DH** |
 
 > [!NOTE]
 > The total cost of 2200 DH is about $235 USD. I purchased the mini PC and upgraded the RAM on February 27, 2026, when the exchange rate was approximately 9.15 MAD for 1 USD.
