@@ -30,3 +30,66 @@ cat /etc/os-release
 ```
 
 You should see an output containing `PRETTY_NAME="Ubuntu 24.04.4 LTS"`. This confirms that the installation was successful and you are on the right version.
+
+## Core system configuration
+
+After installing Ubuntu server, there are some core system configurations that you should do before hosting any services. These configurations will ensure that your server is properly set up and ready to run applications.
+
+### Network configuration
+
+Your server needs to have a static IP address so that you can reliably access it from other devices on your network. If you do not set a static IP address, your server's IP may change after a reboot, making it difficult to connect to your self-hosted services.
+
+To set a static IP address, you can use the [Netplan](https://netplan.io/) utility. First, you need to find the name of your network interface and your current IP address by running the following command:
+
+```bash
+ip a
+```
+
+This command will list all the network interfaces on your server. Look for the one connected to your network. The output of the `ip a` command looks like this:
+
+
+```text
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host noprefixroute 
+       valid_lft forever preferred_lft forever
+
+2: eno1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 ...
+    inet 192.168.1.14/24 brd 192.168.1.255 scope global eno1
+
+...
+```
+
+In this example, the network interface is `eno1`, and it has the IP address `192.168.1.14`.
+
+Once you identify your network interface, you can configure it. Open the default Netplan configuration file using the `nano` text editor:
+
+```bash
+sudo nano /etc/netplan/50-cloud-init.yaml
+```
+
+Replace the contents of the file with the following configuration. Make sure to replace `eno1` with your interface name, `192.168.1.14/24` with your desired static IP, and `192.168.1.254` with your router's gateway IP. 
+
+```yaml
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    eno1:
+      dhcp4: no
+      addresses:
+        - 192.168.1.14/24
+      routes:
+        - to: default
+          via: 192.168.1.254
+      nameservers:
+        addresses: [8.8.8.8, 1.1.1.1]
+```
+
+Save the file and exit the editor. Finally, apply the changes to your network by running this command:
+
+```bash
+sudo netplan apply
+```
