@@ -236,3 +236,41 @@ tmpfs                              782M   12K  782M   1% /run/user/1000
 ```
 
 The root partition size is now `232G`, which confirms the expansion was successful.
+
+### Timezone setup
+
+Setting the correct timezone ensures that your server logs, database entries, and background cron jobs execute exactly when you expect them to. 
+
+To set the server timezone to `Africa/Casablanca`, run this command:
+
+```bash
+sudo timedatectl set-timezone Africa/Casablanca
+```
+
+After setting the timezone, it is good practice to ensure your server automatically synchronizes its clock with [internet time servers](https://tf.nist.gov/tf-cgi/servers.cgi) (NTP). This prevents the server's internal clock from drifting over time.
+
+Enable the time synchronization service:
+
+```bash
+sudo timedatectl set-ntp true
+```
+
+You can verify that both the timezone and the NTP service are correctly configured by running:
+
+```bash
+timedatectl
+```
+
+Your output will look like this:
+
+```text
+               Local time: Fri 2026-03-20 20:36:58 +00
+           Universal time: Fri 2026-03-20 20:36:58 UTC
+                 RTC time: Fri 2026-03-20 20:36:58
+                Time zone: Africa/Casablanca (+00, +0000)
+System clock synchronized: yes
+              NTP service: active
+          RTC in local TZ: no
+```
+
+Notice that the "Time zone" is correctly set to `Africa/Casablanca`, "System clock synchronized" is `yes`, and the "NTP service" is `active`.
