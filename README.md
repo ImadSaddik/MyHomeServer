@@ -93,3 +93,63 @@ Save the file and exit the editor. Finally, apply the changes to your network by
 ```bash
 sudo netplan apply
 ```
+
+### SSH configuration
+
+Now that your server has a static IP, you can connect to it remotely from your main computer. To make this connection secure, you will set up SSH keys and disable standard password authentication. 
+
+First, generate a new SSH key pair on your local machine using the `Ed25519` algorithm.
+
+> [!NOTE]
+> In the commands below, replace `imad` with the username you created during the Ubuntu server installation process.
+
+```bash
+ssh-keygen -t ed25519 -C "imad@saddik-server" -f ~/.ssh/saddik_server
+```
+
+> [!NOTE]
+> Change the `-C` value to a comment that helps you identify the key later.
+>
+> The `-f ~/.ssh/saddik_server` flag saves the generated key pair as `saddik_server` (private key) and `saddik_server.pub` (public key) in your `~/.ssh/` directory. Make sure to change this name to something that makes sense for your setup.
+
+Next, copy the public key to your home server. You will be prompted to enter your server user's password one last time.
+
+```bash
+ssh-copy-id -i ~/.ssh/saddik_server.pub imad@192.168.1.14
+```
+
+To make connecting easier in the future, configure your local SSH client to use this specific key and remember the server's IP address. Open your local SSH configuration file.
+
+```bash
+nano ~/.ssh/config
+```
+
+Add the following block to the file:
+
+```text
+Host saddik-server
+  HostName 192.168.1.14
+  User imad
+  IdentityFile ~/.ssh/saddik_server
+  IdentitiesOnly yes
+```
+
+Save the file. You can now connect to your server by typing `ssh saddik-server` in your terminal. 
+
+Once you verify that you can log in successfully using your new SSH key, it is time to secure the server by disabling password authentication. Log into the server and open the `cloud-init` SSH configuration file.
+
+```bash
+sudo nano /etc/ssh/sshd_config.d/50-cloud-init.conf
+```
+
+Set `PasswordAuthentication` to `no`.
+
+```text
+PasswordAuthentication no
+```
+
+Save the file and restart the SSH service to apply the changes.
+
+```bash
+sudo systemctl restart ssh
+```
