@@ -274,3 +274,33 @@ System clock synchronized: yes
 ```
 
 Notice that the "Time zone" is correctly set to `Africa/Casablanca`, "System clock synchronized" is `yes`, and the "NTP service" is `active`.
+
+### Headless graphics fix
+
+Because this mini PC will run completely headless (without a monitor attached), a known issue with the Intel graphics driver can occur. The driver may get stuck in an endless loop looking for a display, which hogs the CPU and eventually freezes the server. 
+
+To prevent this, you need to add the `nomodeset` parameter to the GRUB boot configuration. This tells the Linux kernel to use basic video drivers instead of the advanced Intel ones, bypassing the issue entirely.
+
+> [!WARNING]
+> Adding `nomodeset` completely disables your Intel GPU. This is fine for CPU-bound tasks. But if you plan to host a media server like [Plex](https://watch.plex.tv/) or [Jellyfin](https://jellyfin.org/) in the future and want to use hardware video transcoding ([Intel Quick Sync](https://www.intel.com/content/www/us/en/support/articles/000029338/graphics.html)), this setting will prevent it from working. You will need to remove `nomodeset` if you ever need GPU acceleration.
+
+Open the GRUB configuration file in `nano`:
+
+```bash
+sudo nano /etc/default/grub
+```
+
+Find the line that starts with `GRUB_CMDLINE_LINUX_DEFAULT`. Add `nomodeset` inside the quotes, separated by a space. It should look like this:
+
+```text
+GRUB_CMDLINE_LINUX_DEFAULT="nomodeset"
+```
+
+Save and exit the file. To apply these changes, update the GRUB bootloader and reboot the server:
+
+```bash
+sudo update-grub
+sudo reboot
+```
+
+After the server reboots, your core system configuration is complete, and you can safely unplug the monitor and keyboard from the mini PC.
