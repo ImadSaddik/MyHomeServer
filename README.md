@@ -547,3 +547,11 @@ I use [btop](https://github.com/aristocratos/btop) to monitor server resources l
 ```bash
 sudo nala install btop
 ```
+
+### tree
+
+I use `tree` to see folder structures easily directly from the terminal.
+
+```bash
+sudo nala install tree
+```
