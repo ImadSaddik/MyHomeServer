@@ -470,7 +470,7 @@ nano ~/.bashrc
 Append this line to the bottom of the file:
 
 ```bash
-eval "$(starship init bash)"
+eval "$(atuin init bash --disable-up-arrow)"
 ```
 
 Apply the changes to your current session:
