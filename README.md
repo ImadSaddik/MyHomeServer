@@ -647,3 +647,67 @@ I use [aria2](https://github.com/aria2/aria2) to make downloading music files wi
 ```bash
 sudo nala install aria2
 ```
+
+## Docker installation and configuration
+
+Docker is the backbone of this home server. Instead of installing applications directly onto the operating system, which can cause dependency conflicts and make backups difficult, almost all of our self-hosted services will run in isolated Docker containers.
+
+### Installing Docker
+
+First, update your package list and install the basic tools required to fetch external repositories securely:
+
+```bash
+sudo nala update
+sudo nala install ca-certificates curl -y
+```
+
+Next, set up the official GPG key so your system can verify and trust the files coming directly from Docker:
+
+```bash
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+```
+
+With the security key in place, add the official Docker repository to your system sources. This command automatically detects your specific Ubuntu version and creates the source file:
+
+```bash
+sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+Components: stable
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+```
+
+Now, update your package list again so `nala` can read from the newly added Docker repository, and install the Docker packages (including Docker compose):
+
+```bash
+sudo nala update
+sudo nala install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
+```
+
+### Post-installation steps
+
+By default, running Docker commands requires `sudo` privileges. To avoid typing `sudo` every time you want to manage a container, you need to add your current user to the `docker` group.
+
+Run this command to append your user to the group:
+
+```bash
+sudo usermod -aG docker $USER
+```
+
+To apply this new group membership to your current terminal session without logging out, run:
+
+```bash
+newgrp docker
+```
+
+You can verify that Docker is installed and you have the correct permissions by running a quick test:
+
+```bash
+docker ps
+```
+
+If it prints an empty table with headers like `CONTAINER ID`, `IMAGE`, and `COMMAND` without giving you a "permission denied" error, Docker is successfully set up and ready to use.
