@@ -711,3 +711,66 @@ docker ps
 ```
 
 If it prints an empty table with headers like `CONTAINER ID`, `IMAGE`, and `COMMAND` without giving you a "permission denied" error, Docker is successfully set up and ready to use.
+
+### Watchtower
+
+I use [Watchtower](https://github.com/containrrr/watchtower) to automate the process of updating Docker images. Watchtower monitors the running containers. When it detects that a new image is available on the registry, it pulls the new image, gracefully shuts down the existing container, and restarts it with the exact same options used during the initial deployment.
+
+Installing this immediately after Docker ensures all subsequent containers are automatically kept up to date.
+
+> [!NOTE]
+> Before creating the container, we need to establish a directory structure. We will store all Docker configurations inside a central `~/docker_projects/` directory.
+>
+> Every application will get its own subfolder inside it. This convention keeps the host system clean and makes backing up your server configurations incredibly easy; you just copy the single `docker_projects` folder.
+
+First, generate a secure API token. This token allows external services to read Watchtower's metrics. Run this command:
+
+```bash
+openssl rand -hex 16
+```
+
+> [!IMPORTANT]
+> Copy the output of this command and save it in a secure password manager (like [Bitwarden](https://bitwarden.com/)). You will need this exact token later to connect Watchtower to the [Homepage](https://github.com/gethomepage/homepage) dashboard.
+
+Next, create the central Docker directory, the specific Watchtower folder, and open the configuration file:
+
+```bash
+mkdir -p ~/docker_projects/watchtower
+cd ~/docker_projects/watchtower
+nano docker-compose.yml
+```
+
+Paste the following configuration into the file. Be sure to replace `my-secret-token` with the 16-character string you just generated:
+
+```yaml
+services:
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - TZ=Africa/Casablanca
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_SCHEDULE=0 0 21 * * *
+      - WATCHTOWER_HTTP_API_METRICS=true
+      - WATCHTOWER_HTTP_API_TOKEN=my-secret-token
+      - DOCKER_API_VERSION=1.54
+```
+
+Configuration details:
+
+- `docker.sock`: The container requires access to the Docker socket to interact with the Docker API and restart other containers.
+- `WATCHTOWER_CLEANUP=true`: Deletes old, unused images after an update to save SSD storage space.
+- `WATCHTOWER_SCHEDULE`: Uses cron syntax to check for updates every day at 9:00 PM (`0 0 21 * * *`). The `TZ` variable ensures it follows local Moroccan time (Change `TZ` to your local timezone if different).
+- `DOCKER_API_VERSION=1.54`: Forces Watchtower to use a specific Docker API version. To find your current server API version if this ever needs updating, run this command: `docker version --format '{{.Server.APIVersion}}'`
+- `ports`: Maps the internal port `8080` to `8081` on the host machine. This prevents a port conflict with the Minecraft dashboard, which will use `8080`.
+
+To start the container, run:
+
+```bash
+docker compose up -d
+```
