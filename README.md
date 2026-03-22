@@ -571,3 +571,11 @@ I installed [ffmpeg](https://github.com/FFmpeg/FFmpeg) to process audio and vide
 ```bash
 sudo nala install ffmpeg
 ```
+
+### aria2
+
+I use [aria2](https://github.com/aria2/aria2) to make downloading music files with `yt-dlp` faster by opening multiple connections at once.
+
+```bash
+sudo nala install aria2
+```
