@@ -479,6 +479,74 @@ Apply the changes to your current session:
 source ~/.bashrc
 ```
 
+### Atuin
+
+I use Atuin to replace the default bash history with a SQLite database. It allows me to search my command history easily.
+
+Instead of compiling from source, install the pre-built binary using the official script:
+
+```bash
+curl --proto '=https' --tlsv1.2 -LsSf https://setup.atuin.sh | sh
+```
+
+During the installation, the script will ask you a series of questions. Answer them like this to automatically import your existing history but keep the installation completely local and private:
+
+- Would you like to import your existing shell history into Atuin? -> **y**
+- Sign up for a sync account? -> **n**
+- Enable Atuin AI? -> **n**
+- Enable Atuin Daemon? -> **n**
+
+To use the `atuin` command immediately in your current terminal, source its newly created environment file:
+
+```bash
+source ~/.atuin/bin/env
+```
+
+Atuin requires `bash-preexec` to hook into Bash properly. Download it to your home directory:
+
+```bash
+curl https://raw.githubusercontent.com/rcaloras/bash-preexec/master/bash-preexec.sh -o ~/.bash-preexec.sh
+```
+
+Next, create the configuration directory and set up your preferences. This configuration explicitly disables syncing to external servers to keep your data local:
+
+```bash
+mkdir -p ~/.config/atuin
+cat <<EOF > ~/.config/atuin/config.toml
+# DISABLE SYNC: Prevents sending history to any server
+auto_sync = false
+
+# Check for updates online
+update_check = true
+
+# Store failed commands
+store_failed = true
+
+# Database path
+db_path = "~/.local/share/atuin/history.db"
+EOF
+```
+
+Now, configure your `.bashrc` file. Because you installed `Starship` earlier, you need to make sure the order of these tools is correct so they do not conflict. Open the file:
+
+```bash
+nano ~/.bashrc
+```
+
+Go to the very bottom of the file. Make sure your final lines look exactly like this, in this exact order:
+
+```bash
+[[ -f ~/.bash-preexec.sh ]] && source ~/.bash-preexec.sh
+eval "$(starship init bash)"
+eval "$(atuin init bash --disable-up-arrow)"
+```
+
+Save the file and apply the changes to your current session:
+
+```bash
+source ~/.bashrc
+```
+
 ### tmux
 
 I use [tmux](https://github.com/tmux/tmux) to manage multiple terminal sessions. I use a custom configuration for better shortcuts and mouse support.
