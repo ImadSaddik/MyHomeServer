@@ -442,3 +442,40 @@ Since you just installed Node.js and `npm` via `nvm`, you can use `npm` to insta
 ```bash
 npm install -g pnpm@latest-10
 ```
+
+### starship
+
+I use [starship](https://starship.rs/) as a cross-shell prompt to make the terminal look better and provide useful context like git branches and directory information. I have a dedicated repository for my custom configuration.
+
+First, clone the configuration repository:
+
+```bash
+git clone https://github.com/ImadSaddik/MyStarshipConfig.git
+```
+
+Navigate into the folder and run the installation script. This script handles the starship binary installation and copies my `starship.toml` file to `~/.config/`:
+
+```bash
+cd MyStarshipConfig
+chmod +x install.sh
+./install.sh
+```
+
+To finalize the setup, open your `.bashrc` file:
+
+```bash
+nano ~/.bashrc
+```
+
+Append this line to the bottom of the file:
+
+```bash
+eval "$(starship init bash)"
+```
+
+Apply the changes to your current session:
+
+```bash
+source ~/.bashrc
+```
+
