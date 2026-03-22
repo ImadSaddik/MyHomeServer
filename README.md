@@ -479,3 +479,63 @@ Apply the changes to your current session:
 source ~/.bashrc
 ```
 
+### tmux
+
+I use [tmux](https://github.com/tmux/tmux) to manage multiple terminal sessions. I use a custom configuration for better shortcuts and mouse support.
+
+First, install tmux using `nala`:
+
+```bash
+sudo nala install tmux
+```
+
+Clone the configuration repository:
+
+```bash
+git clone https://github.com/ImadSaddik/MyTmuxConfig.git
+```
+
+Navigate into the folder:
+
+```bash
+cd MyTmuxConfig
+```
+
+> [!NOTE]
+> Because this server runs in a headless environment, you need to remove the clipboard integration (`wl-copy` or `xclip`) from the configuration before installing it. If you do not, the installation script will prompt you for a display server, and tmux will throw errors because there is no graphical interface.
+>
+> Open `tmux.conf` and delete section 10 at the bottom:
+>
+> ```text
+> # 10. Copy text to clipboard
+> set-window-option -g mode-keys vi
+> # Copy to system clipboard when releasing mouse
+> bind-key -T copy-mode-vi MouseDragEnd1Pane send-keys -X copy-pipe-and-cancel "wl-copy"
+> ```
+>
+> Next, open `install.sh` and delete the interactive prompt at the bottom. The file should only contain this:
+>
+> ```bash
+> #!/bin/bash
+>
+> CONFIG_FILE="tmux.conf"
+> TARGET_FILE="$HOME/.tmux.conf"
+> BACKUP_FILE="$HOME/.tmux.conf.backup"
+>
+> echo "Setting up your tmux configuration"
+>
+> if [ -f "$TARGET_FILE" ]; then
+>     echo "Found existing tmux.conf. Backing it up to $BACKUP_FILE"
+>     mv "$TARGET_FILE" "$BACKUP_FILE"
+> fi
+>
+> echo "Copying new configuration"
+> cp "$CONFIG_FILE" "$TARGET_FILE"
+> ```
+
+After updating the files, make the script executable and run it:
+
+```bash
+chmod +x install.sh
+./install.sh
+```
