@@ -433,3 +433,12 @@ Now, install the latest LTS (Long Term Support) version of Node.js:
 nvm install --lts
 ```
 
+### pnpm
+
+I use [pnpm](https://github.com/pnpm/pnpm) instead of the default `npm` to install JavaScript packages. It is much faster and saves disk space by using a global store.
+
+Since you just installed Node.js and `npm` via `nvm`, you can use `npm` to install `pnpm` globally:
+
+```bash
+npm install -g pnpm@latest-10
+```
