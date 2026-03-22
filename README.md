@@ -539,3 +539,11 @@ After updating the files, make the script executable and run it:
 chmod +x install.sh
 ./install.sh
 ```
+
+### btop
+
+I use [btop](https://github.com/aristocratos/btop) to monitor server resources like CPU and RAM usage through a beautiful terminal interface.
+
+```bash
+sudo nala install btop
+```
