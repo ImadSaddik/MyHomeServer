@@ -321,3 +321,74 @@ sudo apt install nala
 
 From this point forward, we will use `nala` for all package installations.
 
+### git
+
+I use `git` to track changes to my server configuration scripts and to push this exact documentation to my GitHub account. 
+
+First, install `git`:
+
+```bash
+sudo nala install git
+```
+
+After installing, configure your global identity:
+
+```bash
+git config --global user.name "Imad Saddik"
+git config --global user.email "your.email@example.com"
+```
+
+To securely connect the server to GitHub without typing a password every time, generate a new SSH key specifically for GitHub:
+
+```bash
+ssh-keygen -t ed25519 -C "A good description for this key" -f ~/.ssh/github_ed25519
+```
+
+Because we gave the key a custom name (`github_ed25519`), we need to tell SSH to use it whenever it connects to GitHub. Open the SSH config file:
+
+```bash
+nano ~/.ssh/config
+```
+
+Add this configuration block to the file:
+
+```text
+Host github.com
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/github_ed25519
+```
+
+Save and exit the editor. Then, restrict the permissions on the config file so SSH accepts it:
+
+```bash
+chmod 600 ~/.ssh/config
+```
+
+Now, display your public key so you can copy it:
+
+```bash
+cat ~/.ssh/github_ed25519.pub
+```
+
+Copy the output from the terminal, and follow these steps to add it to your GitHub account:
+
+<!-- TODO: add images here -->
+1. Go to your GitHub account settings in your browser.
+2. Click on **SSH and GPG keys** in the sidebar.
+3. Click the **New SSH key** button.
+4. Give it a descriptive title and paste your key into the "Key" field.
+5. Click **Add SSH key**.
+
+Finally, test the connection to make sure the server can talk to GitHub:
+
+```bash
+ssh -T git@github.com
+```
+
+You will see a warning about the authenticity of the host. Type `yes` and press `Enter`. If everything is set up correctly, you will see a success message looking like this:
+
+```text
+Hi ImadSaddik! You've successfully authenticated, but GitHub does not provide shell access.
+```
+
