@@ -801,7 +801,7 @@ services:
     image: ghcr.io/gethomepage/homepage:latest
     container_name: homepage
     environment:
-      HOMEPAGE_ALLOWED_HOSTS: 192.168.1.14:3000
+      HOMEPAGE_ALLOWED_HOSTS: YOUR_SERVER_IP:3000
       PUID: 1000
       PGID: 988
     ports:
@@ -814,7 +814,7 @@ services:
 
 Configuration details:
 
-- `HOMEPAGE_ALLOWED_HOSTS`: Restricts access. You must replace `192.168.1.14` with the actual IP address of your server. If you do not know your server IP, run the `ip a` command to find it.
+- `HOMEPAGE_ALLOWED_HOSTS`: Restricts access. You must replace `YOUR_SERVER_IP` with the actual IP address of your server. If you do not know your server IP, run the `ip a` command to find it.
 - `PUID: 1000`: Runs the container as your primary user so you retain ownership of the created configuration files.
 - `PGID: 988`: This maps the container to the `docker` group on the host. Homepage needs to read `/var/run/docker.sock` to monitor your containers and display their statuses. Passing this specific group ID allows it to read the socket securely without running as the root user. To find your system's exact docker group ID, run the `id` command in your terminal and look for the number next to `(docker)`.
 
@@ -827,3 +827,48 @@ docker compose up -d
 Docker will automatically create the `config/` directory and populate it with default files. Right now, the dashboard is mostly empty. You can view it by going to [http://YOUR_SERVER_IP:3000](http://YOUR_SERVER_IP:3000).
 
 We will update the `config/services.yaml` file to populate this dashboard as we install the rest of the tools.
+
+#### Initial dashboard configuration
+
+With the dashboard running, we can start adding services to it. We will initialize the configuration with your public websites and the Watchtower container we set up earlier.
+
+Open the services configuration file:
+
+```bash
+nano ~/docker_projects/homepage/config/services.yaml
+```
+
+Delete everything in the file and replace it with this foundational structure:
+
+```yaml
+- Self-hosted services:
+  - Watchtower:
+    href: http://YOUR_SERVER_IP:8081
+    description: Automatic container updates
+    icon: watchtower.png
+    widget:
+      type: watchtower
+      url: http://YOUR_SERVER_IP:8081
+      key: my-secret-token
+
+- My websites:
+  - imadsaddik.com:
+    href: https://imadsaddik.com
+    description: Personal website
+
+  - myuniversehub.com:
+    href: https://myuniversehub.com
+    description: A better version of APOD.
+```
+
+> [!IMPORTANT]
+> You need to make two manual changes to this file:
+> 
+> - Replace `YOUR_SERVER_IP` with your actual server IP address.
+> - Replace `my-secret-token` with the secure 16-character key you generated during the Watchtower installation.
+
+Save the file. Homepage updates automatically, so if you refresh your browser at [http://YOUR_SERVER_IP:3000](http://YOUR_SERVER_IP:3000), you will immediately see your websites and a live Watchtower widget showing your container update statistics.
+
+<!-- TODO: add image here -->
+
+Homepage is fully customizable. You can also modify `bookmarks.yaml`, `settings.yaml`, and `widgets.yaml` in the same `config/` directory. To learn more about how to customize it fully, read the [official configuration documentation](https://github.com/gethomepage/homepage/tree/main/docs/configs).
