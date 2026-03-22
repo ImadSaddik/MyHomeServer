@@ -407,3 +407,29 @@ After the installation is complete, run this command to print `uv`'s version and
 ```bash
 uv --version
 ```
+
+### nvm
+
+I use [Node Version Manager](https://github.com/nvm-sh/nvm) (`nvm`) to install and manage `Node.js` versions.
+
+First, download and run the installation script:
+
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash
+```
+
+> [!NOTE]
+> The curl command above installs `nvm` version `0.40.4`. You can check for the latest version on the [nvm GitHub releases page](https://github.com/nvm-sh/nvm/releases).
+
+Your current terminal session does not know about NVM yet. Run this command to load it immediately:
+
+```bash
+source ~/.bashrc
+```
+
+Now, install the latest LTS (Long Term Support) version of Node.js:
+
+```bash
+nvm install --lts
+```
+
