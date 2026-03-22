@@ -712,6 +712,8 @@ docker ps
 
 If it prints an empty table with headers like `CONTAINER ID`, `IMAGE`, and `COMMAND` without giving you a "permission denied" error, Docker is successfully set up and ready to use.
 
+## Core Docker automation
+
 ### Watchtower
 
 I use [Watchtower](https://github.com/containrrr/watchtower) to automate the process of updating Docker images. Watchtower monitors the running containers. When it detects that a new image is available on the registry, it pulls the new image, gracefully shuts down the existing container, and restarts it with the exact same options used during the initial deployment.
