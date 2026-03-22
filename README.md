@@ -304,3 +304,20 @@ sudo reboot
 ```
 
 After the server reboots, your core system configuration is complete, and you can safely unplug the monitor and keyboard from the mini PC.
+
+## Command line utilities
+
+With the core system configured, the next step is to install the essential command line utilities. These tools make package management, version control, and general server maintenance much easier.
+
+### nala
+
+I use [nala](https://github.com/volitank/nala) as a replacement for the default `apt` package manager. There is nothing wrong with `apt`, but `nala` formats the terminal output beautifully, making it much easier to read what is being installed or upgraded.
+
+Install `nala` using `apt`:
+
+```bash
+sudo apt install nala
+```
+
+From this point forward, we will use `nala` for all package installations.
+
