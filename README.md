@@ -776,3 +776,54 @@ To start the container, run:
 ```bash
 docker compose up -d
 ```
+
+## Dockerized services
+
+This section covers the third-party applications running in isolated Docker containers. We store all of these configurations in the `~/docker_projects/` directory to keep the host system clean.
+
+### Homepage
+
+If you have multiple projects, you will find it hard to remember every port. [Homepage](https://github.com/gethomepage/homepage) solves this by giving you one dashboard that lists every project you are hosting. We will install the base dashboard first and add services to it one by one as we build the server.
+
+Create the project directory and open the configuration file:
+
+```bash
+mkdir -p ~/docker_projects/homepage
+cd ~/docker_projects/homepage
+nano docker-compose.yml
+```
+
+Paste the following configuration:
+
+```yaml
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    environment:
+      HOMEPAGE_ALLOWED_HOSTS: 192.168.1.14:3000
+      PUID: 1000
+      PGID: 988
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./config:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+```
+
+Configuration details:
+
+- `HOMEPAGE_ALLOWED_HOSTS`: Restricts access. You must replace `192.168.1.14` with the actual IP address of your server. If you do not know your server IP, run the `ip a` command to find it.
+- `PUID: 1000`: Runs the container as your primary user so you retain ownership of the created configuration files.
+- `PGID: 988`: This maps the container to the `docker` group on the host. Homepage needs to read `/var/run/docker.sock` to monitor your containers and display their statuses. Passing this specific group ID allows it to read the socket securely without running as the root user. To find your system's exact docker group ID, run the `id` command in your terminal and look for the number next to `(docker)`.
+
+Start the container in the background:
+
+```bash
+docker compose up -d
+```
+
+Docker will automatically create the `config/` directory and populate it with default files. Right now, the dashboard is mostly empty. You can view it by going to [http://YOUR_SERVER_IP:3000](http://YOUR_SERVER_IP:3000).
+
+We will update the `config/services.yaml` file to populate this dashboard as we install the rest of the tools.
