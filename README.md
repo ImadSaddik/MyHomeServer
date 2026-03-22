@@ -563,3 +563,11 @@ I installed [nginx](https://github.com/nginx/nginx) to set up web servers and re
 ```bash
 sudo nala install nginx -y
 ```
+
+### ffmpeg
+
+I installed [ffmpeg](https://github.com/FFmpeg/FFmpeg) to process audio and video files.
+
+```bash
+sudo nala install ffmpeg
+```
