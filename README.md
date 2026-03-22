@@ -392,3 +392,18 @@ You will see a warning about the authenticity of the host. Type `yes` and press 
 Hi ImadSaddik! You've successfully authenticated, but GitHub does not provide shell access.
 ```
 
+### uv
+
+I love [Anaconda](https://www.anaconda.com/), but I do not want it to consume a lot of storage on my mini PC. Because of this, I use [uv](https://docs.astral.sh/uv/) instead to manage Python projects and dependencies quickly and efficiently.
+
+Install `uv` by running its official installation script:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+After the installation is complete, run this command to print `uv`'s version and confirm that it is installed correctly:
+
+```bash
+uv --version
+```
