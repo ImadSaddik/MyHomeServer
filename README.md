@@ -555,3 +555,11 @@ I use `tree` to see folder structures easily directly from the terminal.
 ```bash
 sudo nala install tree
 ```
+
+### nginx
+
+I installed [nginx](https://github.com/nginx/nginx) to set up web servers and reverse proxies for my self-hosted applications.
+
+```bash
+sudo nala install nginx -y
+```
