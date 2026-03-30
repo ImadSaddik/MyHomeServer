@@ -100,6 +100,62 @@ Loop 1/1:
 Done.
 ```
 
+### Testing the storage drive
+
+Next, you need to check the health of your NVMe SSD. Linux uses a system called [SMART](https://en.wikipedia.org/wiki/Self-Monitoring,_Analysis_and_Reporting_Technology) to read hardware error logs directly from the drive.
+
+Install [smartmontools](https://github.com/smartmontools/smartmontools):
+
+```bash
+sudo nala install smartmontools
+```
+
+First, find the exact name of your drive by listing your storage devices:
+
+```bash
+lsblk
+```
+
+Look for your main drive. For this mini PC, it is called `nvme0n1`. Once you have the name, ask the drive to print its internal health report:
+
+```bash
+sudo smartctl -a /dev/nvme0n1
+```
+
+Scroll through the output and look for a section called `SMART/Health Information`. You want to check the `Media and Data Integrity Errors` line. If this number is `0`, your drive is in perfect physical condition.
+
+Here is an example of a healthy drive report:
+
+```text
+=== START OF SMART DATA SECTION ===
+SMART overall-health self-assessment test result: PASSED
+
+SMART/Health Information (NVMe Log 0x02)
+Critical Warning:                   0x00
+Temperature:                        32 Celsius
+Available Spare:                    100%
+Available Spare Threshold:          5%
+Percentage Used:                    63%
+Data Units Read:                    71,699,614 [36.7 TB]
+Data Units Written:                 116,882,379 [59.8 TB]
+Host Read Commands:                 1,750,814,398
+Host Write Commands:                4,269,382,501
+Controller Busy Time:               6,608
+Power Cycles:                       496
+Power On Hours:                     19,212
+Unsafe Shutdowns:                   66
+Media and Data Integrity Errors:    0
+Error Information Log Entries:      0
+```
+
+Do not just glance at the output. Here are the five most important lines you need to check to know if your drive is healthy:
+
+* **SMART overall-health self-assessment test result:** This must say `PASSED`. If it says `FAILED`, your drive is dying and you should replace it immediately.
+* **Critical Warning:** This should be `0x00`. Any other number means the drive controller has found a serious hardware problem.
+* **Available Spare:** This should be at or near `100%`. SSDs have backup memory blocks they use when normal blocks break. If this number drops close to the `Available Spare Threshold`, the drive is running out of backup memory.
+* **Percentage Used:** This shows how much of the expected lifespan of the drive you have used. In the example above, `63%` means the drive is getting older, but it is not broken.
+* **Media and Data Integrity Errors:** This number must be exactly `0`. If it is higher than zero, it means the drive is actively corrupting your data.
+
 ## Core system configuration
 
 After installing Ubuntu Server, there are a few core system configurations you should complete before hosting any services. These initial steps ensure your server is secure, stable, and ready to run applications smoothly.
