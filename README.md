@@ -198,6 +198,39 @@ Here is what a healthy Gigabit connection looks like:
 > If your bitrate is around `95 Mbits/sec` while using an ethernet cable, you likely have a damaged cable that has fallen back to "Fast Ethernet" speeds. You need to replace the cable.
 > If your bitrate is jumping around between `50 Mbits/sec` and `100 Mbits/sec`, you are likely testing over Wi-Fi instead of a wired connection.
 
+### Testing the processor and thermals
+
+Mini PCs have very small cooling fans. If the thermal paste is old or dust is blocking the vents, the server might overheat and shut down when it is under heavy load. You should stress test the CPU and monitor the temperatures to ensure the cooling system works.
+
+First, install the CPU stress testing tool:
+
+```bash
+sudo nala install stress-ng
+```
+
+Next, open two terminal windows connected to your server. 
+
+In the first window, open your system monitor to watch the CPU temperatures:
+
+```bash
+btop
+```
+
+In the second window, start the CPU stress test. The Intel Core i3-9100T in this machine has 4 cores, so we will tell the tool to stress all 4 cores for exactly 3 minutes:
+
+```bash
+stress-ng --cpu 4 --timeout 3m
+```
+
+Watch the temperature graph in `btop`. It is normal for the CPU to get hot under a 100% synthetic load, but it should stay below 85 degrees Celsius. If it quickly hits 90 or 100 degrees, you need to open the mini PC, clean the fan, and replace the thermal paste.
+
+Here is an example of a healthy CPU under full load, maxing out at around 70 degrees Celsius:
+
+![CPU stress test temperature curve](./images/cpu_stress_test.png)
+
+> [!NOTE]
+> The test started at 08:03 AM.
+
 ## Core system configuration
 
 After installing Ubuntu Server, there are a few core system configurations you should complete before hosting any services. These initial steps ensure your server is secure, stable, and ready to run applications smoothly.
