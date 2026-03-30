@@ -44,6 +44,62 @@ cat /etc/os-release
 
 You should see an output containing `PRETTY_NAME="Ubuntu 24.04.4 LTS"`. This confirms that the installation was successful and you are on the right version.
 
+## Testing the hardware
+
+Before you configure the system or install any services, you need to test your hardware. A bad RAM stick or a failing SSD will cause system crashes that look like software bugs. Finding physical hardware problems early will save you a lot of time.
+
+### Testing the memory
+
+Use [memtester](https://pyropus.ca./software/memtester/) to stress test the system memory. 
+
+First, install the tool:
+
+```bash
+sudo nala install memtester
+```
+
+Because this machine has 32GB of RAM, we will test 28GB. This leaves 4GB free so the operating system does not crash from running out of memory. The `1` at the end of the command tells the tool to run the test loop exactly one time.
+
+```bash
+sudo memtester 28G 1
+```
+
+This test will take a long time to finish. The tool will write patterns of data to the RAM and read them back to make sure the memory cells hold the correct information. If the memory is healthy, you will see `ok` next to each test. 
+
+Here is what a successful test looks like:
+
+```text
+memtester version 4.6.0 (64-bit)
+Copyright (C) 2001-2020 Charles Cazabon.
+Licensed under the GNU General Public License version 2 (only).
+
+pagesize is 4096
+pagesizemask is 0xfffffffffffff000
+want 28672MB (30064771072 bytes)
+got  28672MB (30064771072 bytes), trying mlock ...locked.
+Loop 1/1:
+  Stuck Address       : ok         
+  Random Value        : ok
+  Compare XOR         : ok
+  Compare SUB         : ok
+  Compare MUL         : ok
+  Compare DIV         : ok
+  Compare OR          : ok
+  Compare AND         : ok
+  Sequential Increment: ok
+  Solid Bits          : ok         
+  Block Sequential    : ok         
+  Checkerboard        : ok         
+  Bit Spread          : ok         
+  Bit Flip            : ok         
+  Walking Ones        : ok         
+  Walking Zeroes      : ok         
+  8-bit Writes        : ok
+  16-bit Writes       : ok
+
+Done.
+```
+
 ## Core system configuration
 
 After installing Ubuntu Server, there are a few core system configurations you should complete before hosting any services. These initial steps ensure your server is secure, stable, and ready to run applications smoothly.
