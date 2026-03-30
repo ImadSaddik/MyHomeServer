@@ -156,6 +156,48 @@ Do not just glance at the output. Here are the five most important lines you nee
 * **Percentage Used:** This shows how much of the expected lifespan of the drive you have used. In the example above, `63%` means the drive is getting older, but it is not broken.
 * **Media and Data Integrity Errors:** This number must be exactly `0`. If it is higher than zero, it means the drive is actively corrupting your data.
 
+
+### Testing the network speed
+
+Your home server should be connected directly to your router with an ethernet cable. Wi-Fi is too slow and unstable for a server. Sometimes, a damaged cable or a bad switch port will cause the connection to drop from `1000 Mbps` (Gigabit) down to `100 Mbps` without giving you any error messages. You should test the actual physical speed of your local network.
+
+We will use a tool called [iperf3](https://github.com/esnet/iperf). You need to install it on both your server and your main computer.
+
+On your server, install the tool:
+
+```bash
+sudo nala install iperf3
+```
+
+> [!NOTE]
+> During the installation, a screen will appear asking if you want to "Start Iperf3 as a daemon automatically". Select **No**. We only want to run this tool manually when we are actively testing the network.
+
+Start `iperf3` in server mode so it listens for a connection:
+
+```bash
+iperf3 -s
+```
+
+Now, open a terminal on your main personal computer. Install `iperf3` on it as well. Run this command on your main computer to send traffic to the server. Replace `192.168.1.14` with your server's actual IP address:
+
+```bash
+iperf3 -c 192.168.1.14
+```
+
+The test will run for 10 seconds. Look at the `Bitrate` column in the final output. If your network and cables are healthy, you should see speeds close to `940 Mbits/sec`.
+
+Here is what a healthy Gigabit connection looks like:
+
+```text
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec  1.10 GBytes   943 Mbits/sec    0              sender
+[  5]   0.00-10.00  sec  1.09 GBytes   940 Mbits/sec                  receiver
+```
+
+> [!WARNING]
+> If your bitrate is around `95 Mbits/sec` while using an ethernet cable, you likely have a damaged cable that has fallen back to "Fast Ethernet" speeds. You need to replace the cable.
+> If your bitrate is jumping around between `50 Mbits/sec` and `100 Mbits/sec`, you are likely testing over Wi-Fi instead of a wired connection.
+
 ## Core system configuration
 
 After installing Ubuntu Server, there are a few core system configurations you should complete before hosting any services. These initial steps ensure your server is secure, stable, and ready to run applications smoothly.
