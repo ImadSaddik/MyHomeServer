@@ -239,6 +239,9 @@ After installing Ubuntu Server, there are a few core system configurations you s
 
 Lenovo ThinkCentre Tiny machines running Linux often suffer from a low-level hardware bug related to processor power management ([Intel C-states](https://www.thomas-krenn.com/en/wiki/Processor_P-states_and_C-states)). The system can fail to wake up from deep sleep states, causing the server to freeze completely without leaving any crash logs.
 
+> [!TIP]
+> This issue is well-documented in the community. For example, [this Proxmox forum thread](https://forum.proxmox.com/threads/max-cstate-1-fixed-freezing-on-ve-8-x-but-version-9-upgrade-fresh-seems-to-bring-the-issue-back-2400ge.177004/) shows users with similar Lenovo Tiny hardware experiencing identical freezes. The final solution for them was the same thing we are doing here. They updated the BIOS to the latest version and the freezes stopped.
+
 To permanently fix this and ensure server stability, you must update the motherboard BIOS to the latest version.
 
 First, check your current BIOS version and its release date:
