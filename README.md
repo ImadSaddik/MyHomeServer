@@ -235,6 +235,64 @@ Here is an example of a healthy CPU under full load, maxing out at around 70 deg
 
 After installing Ubuntu Server, there are a few core system configurations you should complete before hosting any services. These initial steps ensure your server is secure, stable, and ready to run applications smoothly.
 
+### Updating the BIOS
+
+Lenovo ThinkCentre Tiny machines running Linux often suffer from a low-level hardware bug related to processor power management ([Intel C-states](https://www.thomas-krenn.com/en/wiki/Processor_P-states_and_C-states)). The system can fail to wake up from deep sleep states, causing the server to freeze completely without leaving any crash logs.
+
+To permanently fix this and ensure server stability, you must update the motherboard BIOS to the latest version.
+
+First, check your current BIOS version and its release date:
+
+```bash
+sudo dmidecode -t bios
+```
+
+The output will look like this:
+
+```text
+# dmidecode 3.5
+Getting SMBIOS data from sysfs.
+SMBIOS 3.2.1 present.
+
+Handle 0x0000, DMI type 0, 26 bytes
+BIOS Information
+    Vendor: LENOVO
+    Version: M1UKT77A
+    Release Date: 04/10/2024
+    Address: 0xF0000
+    Runtime Size: 64 kB
+    ROM Size: 12 MB
+    Characteristics:
+        ...
+    BIOS Revision: 1.119
+    Firmware Revision: 1.24
+```
+
+#### Downloading the latest BIOS version
+
+In this example, the BIOS version is `M1UKT77A`, released on `04/10/2024`. Let's use the [Lenovo support website](https://pcsupport.lenovo.com/ma/en/) to find if there is a newer BIOS version available for the ThinkCentre M720Q Tiny.
+
+Type `M720q` in the search bar and click on the first result that appears. This will take you to the support page for your specific model.
+
+![Type "M720q" in the search bar and click on the first result](./images/lenovo_support_search.png)
+
+Click on "Drivers & Software" in the options below the model name.
+
+![Click on "Drivers & Software"](./images/lenovo_support_drivers.png)
+
+Next, click on "Select Drivers" under the "Manual Update" section.
+
+![Click on "Select Drivers"](./images/lenovo_support_select_drivers.png)
+
+Finally, click on "BIOS/UEFI" to see the available BIOS updates for your machine.
+
+![Click on "BIOS/UEFI"](./images/lenovo_support_bios.png)
+
+Download the file with the name "BIOS Update (ISO Image Version)". Do not use the Windows `.exe` file or the USB Drive Package.
+
+![Download the "BIOS Update (ISO Image Version)"](./images/lenovo_support_bios_download.png)
+
+
 ### Network configuration
 
 Your server needs to have a static IP address so that you can reliably access it from other devices on your network. If you do not set a static IP address, your server's IP may change after a reboot, making it difficult to connect to your self-hosted services.
