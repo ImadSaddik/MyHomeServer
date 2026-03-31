@@ -316,6 +316,17 @@ Select your USB drive from the device dropdown menu and click the install button
 > [!NOTE]
 > If your USB drive does not show up after installing Ventoy, unplug it and plug it back in. It should show up as a normal storage drive named `Ventoy`.
 
+#### Copying the bios update to the usb
+
+Once the Ventoy installation finishes, your USB drive will show up on your computer as a normal empty storage drive named `Ventoy`. 
+
+Copy the Lenovo BIOS `.iso` file you downloaded earlier and paste it directly into this drive.
+  
+> [!WARNING]
+> Do not extract the ISO file.
+
+![Copy the BIOS ISO file to the Ventoy drive](./images/ventoy_copy_iso.png)
+
 ### Network configuration
 
 Your server needs to have a static IP address so that you can reliably access it from other devices on your network. If you do not set a static IP address, your server's IP may change after a reboot, making it difficult to connect to your self-hosted services.
