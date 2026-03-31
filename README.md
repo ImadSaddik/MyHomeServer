@@ -327,6 +327,84 @@ Copy the Lenovo BIOS `.iso` file you downloaded earlier and paste it directly in
 
 ![Copy the BIOS ISO file to the Ventoy drive](./images/ventoy_copy_iso.png)
 
+#### Flashing the bios on the server
+
+Safely eject the USB drive from your main computer and plug it into your Lenovo mini PC.
+
+Reboot your server. As it starts up, press the `F12` key repeatedly to open the Lenovo boot menu. 
+
+Select your USB flash drive from the list. It will be called `USB HDD: USB, Partition 2`.
+
+![Select Partition 2 from the boot menu](./images/boot_menu_ventoy.jpg)
+
+Because the server has [Secure Boot](https://learn.microsoft.com/en-us/windows-hardware/design/device-experiences/oem-secure-boot) enabled, it will not recognize Ventoy at first. You will see a blue error screen that says [Verification failed: (0x1A) Security Violation](https://askubuntu.com/questions/1456460/verification-failed-0x1a-security-violation-while-installing-ubuntu). This is normal. 
+
+![Secure boot verification failed error](./images/secure_boot_error.jpg)
+
+Press `Enter` on the OK button. This opens the [MOK](https://wiki.debian.org/SecureBoot#MOK_-_Machine_Owner_Key) management screen where we can tell the motherboard to trust Ventoy.
+
+Select `Enroll key from disk`.
+
+![Select Enroll key from disk](./images/mok_enroll_key.jpg)
+
+Select the `VTOYEFI` directory.
+
+![Select VTOYEFI](./images/mok_select_vtoyefi.jpg)
+
+Select the `ENROLL_THIS_KEY_IN_MOKMANAGER.cer` file.
+
+![Select the certificate file](./images/mok_select_cer.jpg)
+
+Select `Continue`.
+
+![Select Continue](./images/mok_continue.jpg)
+
+Select `Yes` to confirm you want to enroll the key.
+
+![Select Yes to enroll the key](./images/mok_confirm_yes.jpg)
+
+Finally, select `Reboot`.
+
+![Select Reboot](./images/mok_reboot.jpg)
+
+As the server restarts, press the `F12` key repeatedly again to open the boot menu. Select `USB, Partition 2` just like you did the first time. 
+
+Now Ventoy will load successfully. You will see the Lenovo BIOS `.iso` file on the screen. Select it and press `Enter`.
+
+![Select the BIOS iso file in Ventoy](./images/ventoy_select_iso.jpg)
+
+Select `Boot in normal mode`.
+
+![Select Boot in normal mode](./images/ventoy_normal_mode.jpg)
+
+You do not need to press anything here, just wait for the startup script to finish.
+
+![Startup script running in the shell](./images/bios_startup_script.jpg)
+
+Once the Lenovo Firmware Update Utility launches, it will ask if you want to update the Serial Number. Type `N` and press `Enter`.
+
+![Prompt to update the serial number](./images/bios_update_serial.jpg)
+
+Next, it will ask if you want to update the Machine Type and Model. Type `N` and press `Enter`.
+
+![Prompt to update the machine type and model](./images/bios_update_machine_type.jpg)
+
+After you press `Enter` for the second time, the [AMI Firmware Update Utility](https://www.ami.com/resources/ami-firmware-utility-afu-a-secure-update-utility-for-aptio-v-uefi-bios-firmware/) will automatically take over and start processing the firmware update immediately.
+
+![Firmware update in progress](./images/bios_flashing_progress.jpg)
+
+> [!WARNING]
+> Do not unplug the power cord while it is flashing. The process will take a few minutes, reach 100%, and the machine will restart automatically a few times.
+
+#### Verifying the update
+
+Once the process is complete and your server boots back into Ubuntu, run the check command one more time to confirm the new version is applied:
+
+```bash
+sudo dmidecode -t bios
+```
+You should see the release date is now updated to a 2026 date, and the version matches the file you downloaded. Your hardware is now fully stable and the C-state freezing bug is resolved.
+
 ### Network configuration
 
 Your server needs to have a static IP address so that you can reliably access it from other devices on your network. If you do not set a static IP address, your server's IP may change after a reboot, making it difficult to connect to your self-hosted services.
