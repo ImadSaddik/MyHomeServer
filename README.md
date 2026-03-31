@@ -292,6 +292,26 @@ Download the file with the name "BIOS Update (ISO Image Version)". Do not use th
 
 ![Download the "BIOS Update (ISO Image Version)"](./images/lenovo_support_bios_download.png)
 
+#### Creating a bootable USB
+
+We need to put this `.iso` file onto a USB flash drive. Instead of burning a single image, we will use [Ventoy](https://www.ventoy.net/). Ventoy is a tool that formats your USB drive once, and then you can drag and drop as many `.iso` files onto it as you want.
+
+Go to the [Ventoy releases page on GitHub](https://github.com/ventoy/Ventoy/releases) and download the latest version. Get the `.zip` file if you are on Windows or the `.tar.gz` file if you are on Linux.
+
+![Download the latest version of Ventoy](./images/ventoy_download.png)
+
+Extract the downloaded file and plug a spare USB flash drive into your computer.
+
+> [!WARNING]
+> The next step will completely format your USB drive. All data on it will be permanently erased. Make sure you select the correct drive.
+
+Open the extracted Ventoy folder. If you are on Windows, double click `Ventoy2Disk.exe`. If you are on Linux, open a terminal in that folder and run `sudo ./VentoyGUI.x86_64`.
+
+![Open the Ventoy application](./images/ventoy_open.png)
+
+Select your USB drive from the device dropdown menu and click the install button. Confirm the warning message about data and wait for the installation to complete.
+
+![Successfull Ventoy installation](./images/ventoy_install_success.png)
 
 ### Network configuration
 
