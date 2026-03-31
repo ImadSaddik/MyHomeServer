@@ -313,6 +313,9 @@ Select your USB drive from the device dropdown menu and click the install button
 
 ![Successfull Ventoy installation](./images/ventoy_install_success.png)
 
+> [!NOTE]
+> If your USB drive does not show up after installing Ventoy, unplug it and plug it back in. It should show up as a normal storage drive named `Ventoy`.
+
 ### Network configuration
 
 Your server needs to have a static IP address so that you can reliably access it from other devices on your network. If you do not set a static IP address, your server's IP may change after a reboot, making it difficult to connect to your self-hosted services.
