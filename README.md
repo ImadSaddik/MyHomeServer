@@ -408,6 +408,44 @@ sudo dmidecode -t bios
 ```
 You should see the release date is now updated to a 2026 date, and the version matches the file you downloaded. Your hardware is now fully stable and the C-state freezing bug is resolved.
 
+### Configuring the BIOS settings
+
+After updating the firmware, you should configure the motherboard. Reboot the machine and press `F1` repeatedly during startup to enter the Lenovo BIOS Setup Utility.
+
+#### Automatic power on
+
+If your house loses power, you want the server to turn itself back on automatically when the electricity comes back. If you do not set this, the server will stay off until you manually push the physical power button.
+
+Go to the **Power** tab and select **After Power Loss**. Change the value to **Power On**.
+
+![Set After Power Loss to Power On](./images/bios_power_on.jpg)
+
+#### Disabling secure boot
+
+While Secure Boot is fine for a standard Windows desktop, it can cause headaches on a Linux server if you need to use certain third-party drivers or boot from custom USB tools. 
+
+Go to the **Security** tab, select **Secure Boot**, and change it to **Disabled**.
+
+![Disable Secure Boot](./images/bios_secure_boot.jpg)
+
+#### Enabling deep sleep C-states
+
+C-states allow the processor to use its maximum power-saving features. This lowers your electricity consumption and keeps the mini PC running cool. Because you updated the BIOS in the previous step, it is now completely safe to enable them without the server freezing.
+
+Go to the **Advanced** tab and select **CPU Setup**.
+
+![Open CPU Setup](./images/bios_cpu_setup.jpg)
+
+Find **C State Support** and change it to the maximum option available, which is `C1C3C6C7C8C10`.
+
+![Enable all C States](./images/bios_c_states.jpg)
+
+#### Saving the changes
+
+Press `F10` on your keyboard to open the save prompt. Select **Yes** to save your configuration and reset the server.
+
+![Save configuration and reset](./images/bios_save_reset.jpg)
+
 ### Network configuration
 
 Your server needs to have a static IP address so that you can reliably access it from other devices on your network. If you do not set a static IP address, your server's IP may change after a reboot, making it difficult to connect to your self-hosted services.
