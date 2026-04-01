@@ -412,6 +412,9 @@ You should see the release date is now updated to a 2026 date, and the version m
 
 After updating the firmware, you should configure the motherboard. Reboot the machine and press `F1` repeatedly during startup to enter the Lenovo BIOS Setup Utility.
 
+> [!NOTE]
+> If you are navigating the BIOS menus and the screen suddenly stops responding to your keyboard, do not panic. The Lenovo BIOS interface can sometimes lag and freeze for a few seconds. Your keyboard is fine. Just press the key a few more times and the menu will catch up.
+
 #### Automatic power on
 
 If your house loses power, you want the server to turn itself back on automatically when the electricity comes back. If you do not set this, the server will stay off until you manually push the physical power button.
