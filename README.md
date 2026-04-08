@@ -1122,9 +1122,9 @@ I use [Watchtower](https://github.com/containrrr/watchtower) to automate the pro
 Installing this immediately after Docker ensures all subsequent containers are automatically kept up to date.
 
 > [!NOTE]
-> Before creating the container, we need to establish a directory structure. We will store all Docker configurations inside a central `~/docker_projects/` directory.
+> Before creating the container, we need to establish a directory structure. We will store all Docker configurations inside a central `~/docker-projects/` directory.
 >
-> Every application will get its own subfolder inside it. This convention keeps the host system clean and makes backing up your server configurations incredibly easy; you just copy the single `docker_projects` folder.
+> Every application will get its own subfolder inside it. This convention keeps the host system clean and makes backing up your server configurations incredibly easy; you just copy the single `docker-projects` folder.
 
 First, generate a secure API token. This token allows external services to read Watchtower's metrics. Run this command:
 
@@ -1138,8 +1138,8 @@ openssl rand -hex 16
 Next, create the central Docker directory, the specific Watchtower folder, and open the configuration file:
 
 ```bash
-mkdir -p ~/docker_projects/watchtower
-cd ~/docker_projects/watchtower
+mkdir -p ~/docker-projects/watchtower
+cd ~/docker-projects/watchtower
 nano docker-compose.yml
 ```
 
@@ -1180,7 +1180,7 @@ docker compose up -d
 
 ## Dockerized services
 
-This section covers the third-party applications running in isolated Docker containers. We store all of these configurations in the `~/docker_projects/` directory to keep the host system clean.
+This section covers the third-party applications running in isolated Docker containers. We store all of these configurations in the `~/docker-projects/` directory to keep the host system clean.
 
 ### Homepage
 
@@ -1189,8 +1189,8 @@ If you have multiple projects, you will find it hard to remember every port. [Ho
 Create the project directory and open the configuration file:
 
 ```bash
-mkdir -p ~/docker_projects/homepage
-cd ~/docker_projects/homepage
+mkdir -p ~/docker-projects/homepage
+cd ~/docker-projects/homepage
 nano docker-compose.yml
 ```
 
@@ -1236,7 +1236,7 @@ With the dashboard running, we can start adding services to it. We will initiali
 Open the services configuration file:
 
 ```bash
-nano ~/docker_projects/homepage/config/services.yaml
+nano ~/docker-projects/homepage/config/services.yaml
 ```
 
 Delete everything in the file and replace it with this foundational structure:
