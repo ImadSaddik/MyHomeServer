@@ -1350,3 +1350,91 @@ Add the following under the `Self-hosted services` category:
     type: netdata
     url: http://192.168.1.14:19999
 ```
+
+### Planka
+
+To offload my brain and manage my backlog of ideas, bugs, and features privately, I use [Planka](https://github.com/plankanban/planka). It is a beautiful, open-source alternative to [Trello](https://trello.com/) that gives me a visual Kanban board without exposing my private scribbles to the cloud.
+
+First, create the project directory and the configuration file:
+
+```bash
+mkdir -p ~/docker-projects/planka
+cd ~/docker-projects/planka
+nano docker-compose.yml
+```
+
+Paste the following Docker Compose configuration. Notice that the default port is changed from `3000` to `3002` to avoid conflicts with the Homepage dashboard, and the `BASE_URL` is updated to match the server's static IP:
+
+```yaml
+services:
+  planka:
+    image: ghcr.io/plankanban/planka:latest
+    container_name: planka
+    user: "1000:1000"
+    restart: unless-stopped
+    volumes:
+      - data:/app/data
+    ports:
+      - "3002:1337"
+    environment:
+      - BASE_URL=http://192.168.1.14:3002
+      - DATABASE_URL=postgresql://postgres@postgres/planka
+      - SECRET_KEY=generate_a_random_secret_string_here
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: planka-postgres
+    restart: unless-stopped
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=planka
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d planka"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  data:
+  db-data:
+```
+
+> [!IMPORTANT]
+> Change the `SECRET_KEY` variable to a secure random string before starting the container. You can generate a random 32-character string in your terminal by running `openssl rand -hex 32`.
+
+To create and start the containers, run:
+
+```bash
+docker compose up -d
+```
+
+Starting with version 1.13, Planka no longer creates a default admin user automatically. You need to create one manually by running this script in the same directory:
+
+```bash
+docker compose run --rm planka npm run db:create-admin-user
+```
+
+Follow the prompts in your terminal to set your email, username, and password. Once finished, Planka is running on port `3002` and can be accessed from here: [http://192.168.1.14:3002](http://192.168.1.14:3002).
+
+Let's add Planka to the Homepage dashboard so we can access our backlog easily. Open `services.yaml`:
+
+```bash
+nano ~/docker-projects/homepage/config/services.yaml
+```
+
+Add the following under your `Self-hosted services` category:
+
+```yaml
+- Planka:
+  href: http://192.168.1.14:3002
+  description: Private kanban & backlog
+  icon: planka.png
+```
+
+> [!NOTE]
+> Planka does not have an official Homepage API widget yet, but this bookmark will link you directly to your board.
