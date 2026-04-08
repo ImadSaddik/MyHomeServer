@@ -1717,3 +1717,78 @@ Add the following under your `Self-hosted services` category:
         description: VS Code in the browser
         icon: vscode.png
 ```
+
+### Navidrome
+
+To listen to the music I backup on my phone or laptop, I need a service that can stream audio over the network. I use [Navidrome](https://github.com/navidrome/navidrome) to achieve this.
+
+First, create the project directory and the data folder:
+
+```bash
+mkdir -p ~/docker-projects/navidrome/data
+cd ~/docker-projects/navidrome
+nano docker-compose.yml
+```
+
+Paste the following Docker Compose configuration:
+
+```yaml
+services:
+  navidrome:
+    image: deluan/navidrome:latest
+    container_name: navidrome
+    user: "1000:988"
+    ports:
+      - "4533:4533"
+    restart: unless-stopped
+    environment:
+      - ND_SCANSCHEDULE=1m
+      - ND_LOGLEVEL=info
+    volumes:
+      - ./data:/data
+      - /home/imad/Music/YouTubeMusic:/music:ro
+```
+
+> [!NOTE]
+> The configuration forces the container to run as `1000:988` (your user and the docker group) so it can securely access the host system. We also mount the `/home/imad/Music/YouTubeMusic` directory as read-only (`:ro`), so Navidrome can stream the music but cannot accidentally delete your backup files.
+
+To create and start the container, run:
+
+```bash
+docker compose up -d
+```
+
+You can now access Navidrome here: [http://192.168.1.14:4533](http://192.168.1.14:4533). Upon your first visit, you will be prompted to create an admin user and password.
+
+#### Adding Navidrome to Homepage
+
+Navidrome requires a little extra work to connect to the Homepage dashboard because it uses a secure API token instead of a raw password. 
+
+First, generate your token by combining your Navidrome **password** and a random **salt** string (e.g., `abc123`). 
+
+For example, if your password is `MySecretPassword`, your combined string is `MySecretPasswordabc123`. Run this command in your terminal to generate the MD5 hash, replacing the string with your own:
+
+```bash
+echo -n "MySecretPasswordabc123" | md5sum
+```
+
+Copy the generated hash. Now, open the `services.yaml` file:
+
+```bash
+nano ~/docker-projects/homepage/config/services.yaml
+```
+
+Add the following under your `Self-hosted services` category, pasting your newly generated hash into the `token` field:
+
+```yaml
+    - Navidrome:
+        href: http://192.168.1.14:4533
+        description: Music streaming
+        icon: navidrome.png
+        widget:
+          type: navidrome
+          url: http://192.168.1.14:4533
+          user: imadsaddik
+          token: paste_your_generated_md5_hash_here
+          salt: abc123
+```
