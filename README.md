@@ -1494,3 +1494,166 @@ Add the following under your `Self-hosted services` category:
       url: http://192.168.1.14:3001
       slug: home
 ```
+
+### Healthchecks
+
+I use [Healthchecks](https://github.com/healthchecks/healthchecks) to monitor my automated cron jobs and background scripts. It listens for HTTP requests (pings) from my scripts and alerts me if a job fails to run on time.
+
+First, create the project directory and navigate into it:
+
+```bash
+mkdir -p ~/docker-projects/healthchecks/data
+cd ~/docker-projects/healthchecks
+```
+
+Next, create the environment variables file:
+
+```bash
+nano .env
+```
+
+Paste the following configuration into the file. This tells Healthchecks how to configure its database and where it is being hosted:
+
+```text
+ALLOWED_HOSTS=192.168.1.14
+APPRISE_ENABLED=False
+DB=sqlite
+DB_NAME=/data/hc.sqlite
+DEBUG=False
+DEFAULT_FROM_EMAIL=healthchecks@example.org
+DISCORD_CLIENT_ID=
+DISCORD_CLIENT_SECRET=
+EMAIL_HOST=
+EMAIL_HOST_PASSWORD=
+EMAIL_HOST_USER=
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_USE_VERIFICATION=True
+INTEGRATIONS_ALLOW_PRIVATE_IPS=False
+LINENOTIFY_CLIENT_ID=
+LINENOTIFY_CLIENT_SECRET=
+MASTER_BADGE_LABEL=Mychecks
+MATRIX_ACCESS_TOKEN=
+MATRIX_HOMESERVER=
+MATRIX_USER_ID=
+MATTERMOST_ENABLED=True
+MSTEAMS_ENABLED=True
+OPSGENIE_ENABLED=True
+PAGERTREE_ENABLED=True
+PD_APP_ID=
+PD_ENABLED=True
+PING_BODY_LIMIT=10000
+PING_EMAIL_DOMAIN=192.168.1.14
+PING_ENDPOINT=http://192.168.1.14:6969/ping/
+PROMETHEUS_ENABLED=True
+PUSHBULLET_CLIENT_ID=
+PUSHBULLET_CLIENT_SECRET=
+PUSHOVER_API_TOKEN=
+PUSHOVER_EMERGENCY_EXPIRATION=86400
+PUSHOVER_EMERGENCY_RETRY_DELAY=300
+PUSHOVER_SUBSCRIPTION_URL=
+REGISTRATION_OPEN=True
+REMOTE_USER_HEADER=
+ROCKETCHAT_ENABLED=True
+RP_ID=
+S3_ACCESS_KEY=
+S3_BUCKET=
+S3_ENDPOINT=
+S3_REGION=
+S3_SECRET_KEY=
+S3_TIMEOUT=60
+S3_SECURE=True
+SECRET_KEY=secret_key
+SHELL_ENABLED=False
+SIGNAL_CLI_SOCKET=
+SITE_LOGO_URL=
+SITE_NAME=Mychecks
+SITE_ROOT=http://192.168.1.14:6969
+SLACK_CLIENT_ID=
+SLACK_CLIENT_SECRET=
+SLACK_ENABLED=True
+# SMTPD_PORT=
+SPIKE_ENABLED=True
+TELEGRAM_BOT_NAME=ExampleBot
+TELEGRAM_TOKEN=
+TRELLO_APP_KEY=
+TWILIO_ACCOUNT=
+TWILIO_AUTH=
+TWILIO_FROM=
+TWILIO_USE_WHATSAPP=False
+USE_PAYMENTS=False
+VICTOROPS_ENABLED=True
+WEBHOOKS_ENABLED=True
+WHATSAPP_DOWN_CONTENT_SID=
+WHATSAPP_UP_CONTENT_SID=
+ZULIP_ENABLED=True
+```
+
+> [!IMPORTANT]
+> You must change the `SECRET_KEY=secret_key` line to a strong, random string before starting the container to ensure your session data is secure. You can generate one by running `openssl rand -hex 32` in your terminal.
+
+Save and exit the `.env` file. Now, create your Docker Compose file:
+
+```bash
+nano docker-compose.yml
+```
+
+Paste the following configuration:
+
+```yaml
+services:
+  web:
+    image: healthchecks/healthchecks:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "6969:8000"
+    volumes:
+      - ./data:/data
+    command: uwsgi /opt/healthchecks/docker/uwsgi.ini
+```
+
+> [!IMPORTANT]
+> Healthchecks runs as a non-root user internally. If the container does not have write access to the mapped `data/` directory, it cannot create the SQLite database, and the initial setup will fail. 
+
+Before starting the container, adjust the permissions on the `data/` directory so the container can write to it:
+
+```bash
+chmod 777 data
+```
+
+Now, create and start the container:
+
+```bash
+docker compose up -d
+```
+
+Because Healthchecks is a Django application, you need to initialize the database by running its migrations. Execute this command to run the migration script inside the active container:
+
+```bash
+docker compose run --rm web /opt/healthchecks/manage.py migrate
+```
+
+Next, create an admin account so you can log into the dashboard. It will prompt you for an email and a password:
+
+```bash
+docker compose run --rm web /opt/healthchecks/manage.py createsuperuser
+```
+
+Once the superuser is created, you can access the Healthchecks dashboard here: [http://192.168.1.14:6969/](http://192.168.1.14:6969/).
+
+Let's add Healthchecks to the Homepage dashboard. Open `services.yaml`:
+
+```bash
+nano ~/docker-projects/homepage/config/services.yaml
+```
+
+Add the following under your `Self-hosted services` category:
+
+```yaml
+    - Healthchecks:
+        href: http://192.168.1.14:6969
+        description: Cron job monitoring
+        icon: healthchecks.png
+```
