@@ -1438,3 +1438,59 @@ Add the following under your `Self-hosted services` category:
 
 > [!NOTE]
 > Planka does not have an official Homepage API widget yet, but this bookmark will link you directly to your board.
+
+### Uptime Kuma
+
+I have a few websites deployed to production, and I plan to add more in the future. To ensure they stay online and respond quickly, I use [Uptime Kuma](https://github.com/louislam/uptime-kuma). It is a beautiful, easy-to-use, self-hosted monitoring tool.
+
+First, create the project directory and open the configuration file:
+
+```bash
+mkdir -p ~/docker-projects/uptime-kuma
+cd ~/docker-projects/uptime-kuma
+nano docker-compose.yml
+```
+
+Paste the following Docker Compose configuration:
+
+```yaml
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:2
+    container_name: uptime-kuma
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./data:/app/data
+```
+
+> [!NOTE]
+> Similar to Netdata, Uptime Kuma runs as root internally. Docker will automatically create the `data/` folder when the container starts, and it will be owned by `root`. 
+
+To create and start the container, run:
+
+```bash
+docker compose up -d
+```
+
+You can now access the Uptime Kuma setup screen to create your admin account and configure your website monitors here: [http://192.168.1.14:3001](http://192.168.1.14:3001).
+
+Let's add Uptime Kuma to the Homepage dashboard so you can see your website statuses at a glance. Open `services.yaml`:
+
+```bash
+nano ~/docker-projects/homepage/config/services.yaml
+```
+
+Add the following under your `Self-hosted services` category:
+
+```yaml
+- Uptime Kuma:
+    href: http://192.168.1.14:3001
+    description: Website health monitoring
+    icon: uptime-kuma.png
+    widget:
+      type: uptimekuma
+      url: http://192.168.1.14:3001
+      slug: home
+```
