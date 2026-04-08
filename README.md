@@ -1273,3 +1273,80 @@ Save the file. Homepage updates automatically, so if you refresh your browser at
 <!-- TODO: add image here -->
 
 Homepage is fully customizable. You can also modify `bookmarks.yaml`, `settings.yaml`, and `widgets.yaml` in the same `config/` directory. To learn more about how to customize it fully, read the [official configuration documentation](https://github.com/gethomepage/homepage/tree/main/docs/configs).
+
+### Netdata
+
+I use Netdata to monitor the system health and performance of my server. It runs as a Docker container to keep the host system clean.
+
+First, create the project directory and the configuration folder:
+
+```bash
+mkdir -p ~/docker-projects/netdata/config
+cd ~/docker-projects/netdata
+```
+
+Create the `docker-compose.yml` file:
+
+```bash
+nano docker-compose.yml
+```
+
+Paste the following configuration. This setup gives Netdata read-only access to the host metrics and uses the host network directly:
+
+```yaml
+services:
+  netdata:
+    image: netdata/netdata:stable
+    container_name: netdata
+    pid: host
+    network_mode: host
+    restart: unless-stopped
+    cap_add:
+      - SYS_PTRACE
+      - SYS_ADMIN
+    security_opt:
+      - apparmor:unconfined
+    volumes:
+      - ./config:/etc/netdata
+      - netdatalib:/var/lib/netdata
+      - netdatacache:/var/cache/netdata
+      - /:/host/root:ro,rslave
+      - /etc/passwd:/host/etc/passwd:ro
+      - /etc/group:/host/etc/group:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc/os-release:/host/etc/os-release:ro
+      - /var/log:/host/var/log:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+volumes:
+  netdatalib:
+  netdatacache:
+```
+
+To start the container, run:
+
+```bash
+docker compose up -d
+```
+
+Because we are using `network_mode: host`, Netdata binds directly to the mini PC network. You can access the dashboard here: [http://192.168.1.14:19999](http://192.168.1.14:19999).
+
+Let's add Netdata to Homepage. Open the `services.yaml` file:
+
+```bash
+nano ~/docker-projects/homepage/config/services.yaml
+```
+
+Add the following under the `Self-hosted services` category:
+
+```yaml
+- Netdata:
+  href: http://192.168.1.14:19999
+  description: System health and performance monitoring
+  icon: netdata.png
+  widget:
+    type: netdata
+    url: http://192.168.1.14:19999
+```
