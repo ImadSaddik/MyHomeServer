@@ -1657,3 +1657,63 @@ Add the following under your `Self-hosted services` category:
         description: Cron job monitoring
         icon: healthchecks.png
 ```
+
+### Code server
+
+I use [code-server](https://github.com/coder/code-server) to run VS Code directly in my browser. This allows me to do quick edits on my server files without needing to use the remote server extension in a local VS Code instance, which consumes a lot of storage.
+
+First, create the project directory and the configuration folder:
+
+```bash
+mkdir -p ~/docker-projects/code-server/config
+cd ~/docker-projects/code-server
+nano docker-compose.yml
+```
+
+Paste the following Docker Compose configuration:
+
+```yaml
+services:
+  code-server:
+    image: ghcr.io/coder/code-server:latest
+    container_name: code-server
+    restart: unless-stopped
+    ports:
+      - "8443:8080"
+    volumes:
+      - ./config:/home/coder/.config
+      - /home/imad:/home/coder/workspace
+    environment:
+      - PUID=1000
+      - PGID=988
+      - PASSWORD=strong_password
+```
+
+> [!NOTE]
+> We map `/home/imad` to `/home/coder/workspace` inside the container. This means when you open code-server in your browser, your entire home directory (including all your scripts and docker-projects) will be instantly available to edit. 
+
+> [!IMPORTANT]
+> Make sure to replace `strong_password` with a strong password before starting the container. You will be prompted to enter this password every time you access the web interface.
+
+To create and start the container, run:
+
+```bash
+docker compose up -d
+```
+
+You can now access your web-based code editor here: [http://192.168.1.14:8443](http://192.168.1.14:8443).
+
+Let's add code-server to the Homepage dashboard. Open `services.yaml`:
+
+```bash
+nano ~/docker-projects/homepage/config/services.yaml
+```
+
+Add the following under your `Self-hosted services` category:
+
+```yaml
+    - Code Server:
+        href: http://192.168.1.14:8443
+        description: VS Code in the browser
+        icon: vscode.png
+```
