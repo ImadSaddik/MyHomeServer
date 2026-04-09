@@ -1902,3 +1902,100 @@ You can always check your local logs by looking at the file generated in the pro
 ```bash
 cat ~/scripts/yt-music/download.log
 ```
+
+### Planka backup script
+
+Because Planka holds important personal ideas, we should set up automated backups. We will download the official backup scripts provided by the developers and wrap them in our own script to integrate with Healthchecks and prevent cron race conditions.
+
+First, go to your Healthchecks dashboard and create a new check. Set the schedule to run every night at 9:00 PM (using the Cron expression `0 21 * * *`), set the Grace Time to 30 minutes, and copy the unique Ping URL it generates.
+
+<!-- TODO: add images -->
+
+Next, create a folder for the backups and download the official scripts:
+
+```bash
+mkdir -p ~/docker-projects/planka/backup/logs
+cd ~/docker-projects/planka/backup
+curl -L https://raw.githubusercontent.com/plankanban/planka/master/docker-backup.sh -o backup.sh
+curl -L https://raw.githubusercontent.com/plankanban/planka/master/docker-restore.sh -o restore.sh
+chmod +x backup.sh restore.sh
+```
+
+You need to tell the official backup script the exact names of your Docker containers. Open the file:
+
+```bash
+nano backup.sh
+```
+
+Find the container variables and change them to match what we defined in the `docker-compose.yml` file:
+
+```bash
+DOCKER_CONTAINER_POSTGRES="planka-postgres"
+DOCKER_CONTAINER_PLANKA="planka"
+```
+
+Save and exit the file. Now, create your wrapper script to automate the process, clean up old files, and ping Healthchecks in the correct order:
+
+```bash
+nano run_backup.sh
+```
+
+Paste this code into the file. Remember to replace `your-uuid-here` with the UUID you copied from your dashboard:
+
+```bash
+#!/bin/bash
+set -e
+
+main() {
+    setup_variables
+    ping_healthcheck_start
+    run_planka_backup
+    clean_old_backups
+    ping_healthcheck_success
+}
+
+setup_variables() {
+    export BACKUP_DIR="/home/imad/docker-projects/planka/backup"
+    export LOG_DIR="$BACKUP_DIR/logs"
+    export TIMESTAMP=$(date +%Y%m%d%H%M)
+    export HEALTHCHECK_URL="http://192.168.1.14:6969/ping/your-uuid-here"
+}
+
+ping_healthcheck_start() {
+    curl -fsS --retry 3 "$HEALTHCHECK_URL/start" > /dev/null
+}
+
+run_planka_backup() {
+    cd "$BACKUP_DIR"
+    bash backup.sh > "$LOG_DIR/${TIMESTAMP}-backup.log" 2>&1
+}
+
+clean_old_backups() {
+    find "$BACKUP_DIR" -maxdepth 1 -name "*.tgz" -type f -mtime +14 -delete > "$LOG_DIR/${TIMESTAMP}-delete-backup.log" 2>&1 || true
+    find "$LOG_DIR" -maxdepth 1 -name "*.log" -type f -mtime +14 -delete > /dev/null 2>&1 || true
+}
+
+ping_healthcheck_success() {
+    curl -fsS --retry 3 "$HEALTHCHECK_URL" > /dev/null
+}
+
+main
+```
+
+Make the wrapper script executable:
+
+```bash
+chmod +x run_backup.sh
+```
+
+Finally, add the script to your user crontab:
+
+```bash
+crontab -e
+```
+
+Add this single line to run the wrapper script every night at 9:00 PM:
+
+```text
+0 21 * * * /home/imad/docker-projects/planka/backup/run_backup.sh
+```
