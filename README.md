@@ -1903,7 +1903,7 @@ You can always check your local logs by looking at the file generated in the pro
 cat ~/scripts/yt-music/download.log
 ```
 
-### Planka backup script
+### Planka backup
 
 Because Planka holds important personal ideas, we should set up automated backups. We will download the official backup scripts provided by the developers and wrap them in our own script to integrate with Healthchecks and prevent cron race conditions.
 
