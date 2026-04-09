@@ -1803,6 +1803,8 @@ This script uses `uv` to manage dependencies and install the latest versions of 
 
 First, go to your Healthchecks dashboard and create a new check. Set the schedule to run weekly on Sundays at 10:00 AM, and copy the unique Ping URL it generates for you.
 
+<!-- TODO: add images here -->
+
 Next, create the project directory and the script file:
 
 ```bash
