@@ -1792,3 +1792,111 @@ Add the following under your `Self-hosted services` category, pasting your newly
           token: paste_your_generated_md5_hash_here
           salt: abc123
 ```
+
+## Native services and automation
+
+### Music backup
+
+I use YouTube Music, and I have a specific playlist where I save the best music with no lyrics. To keep a local copy on my server, I wrote a script to download the audio automatically using [yt-dlp](https://github.com/yt-dlp/yt-dlp).
+
+This script uses `uv` to manage dependencies and install the latest versions of `yt-dlp` and `mutagen` before every run, because Google changes the YouTube API often. It also uses `aria2` to speed up the downloads and pings `Healthchecks` when the job starts and finishes.
+
+First, go to your Healthchecks dashboard and create a new check. Set the schedule to run weekly on Sundays at 10:00 AM, and copy the unique Ping URL it generates for you.
+
+Next, create the project directory and the script file:
+
+```bash
+mkdir -p ~/scripts/yt-music
+nano ~/scripts/yt-music/backup_music.sh
+```
+
+Paste this code into the file. Make sure to replace `your-uuid-here` in the `HEALTHCHECK_URL` variable with the UUID you just copied from your dashboard:
+
+```bash
+#!/bin/bash
+set -e
+
+main() {
+    setup_variables
+    create_directories
+    ping_healthcheck_start
+    update_dependencies
+    run_download
+    ping_healthcheck_success
+}
+
+setup_variables() {
+    export UV_EXECUTABLE_PATH="/home/imad/.local/bin/uv"
+    export PROJECT_DIRECTORY="/home/imad/scripts/yt-music"
+    export MUSIC_DIRECTORY="/home/imad/Music/YouTubeMusic"
+    export LOG_FILE_PATH="$PROJECT_DIRECTORY/download.log"
+    export PLAYLIST_URL="https://www.youtube.com/playlist?list=PL22-qG2MGGhAr96FUEz9jv11sVx0nSZTY"
+    export HEALTHCHECK_URL="http://192.168.1.14:6969/ping/your-uuid-here"
+}
+
+create_directories() {
+    mkdir -p "$MUSIC_DIRECTORY"
+    mkdir -p "$PROJECT_DIRECTORY"
+}
+
+ping_healthcheck_start() {
+    curl -fsS --retry 3 "$HEALTHCHECK_URL/start" > /dev/null
+}
+
+update_dependencies() {
+    if [ ! -d "$PROJECT_DIRECTORY/.venv" ]; then
+        "$UV_EXECUTABLE_PATH" venv "$PROJECT_DIRECTORY/.venv"
+    fi
+    
+    "$UV_EXECUTABLE_PATH" pip install --python "$PROJECT_DIRECTORY/.venv" --upgrade yt-dlp mutagen --quiet
+}
+
+run_download() {
+    echo "[JOB STARTED] $(date)" >> "$LOG_FILE_PATH"
+    
+    "$PROJECT_DIRECTORY/.venv/bin/yt-dlp" \
+      --ignore-errors \
+      --extract-audio \
+      --audio-format mp3 \
+      --js-runtimes node \
+      --embed-metadata \
+      --embed-thumbnail \
+      --download-archive "$PROJECT_DIRECTORY/archive.txt" \
+      --downloader aria2c \
+      --downloader-args "aria2c:-x 16 -s 16 -k 1M" \
+      --output "$MUSIC_DIRECTORY/%(title)s.%(ext)s" \
+      "$PLAYLIST_URL" >> "$LOG_FILE_PATH" 2>&1 || true
+
+    echo "[JOB SUCCEEDED] $(date)" >> "$LOG_FILE_PATH"
+}
+
+ping_healthcheck_success() {
+    curl -fsS --retry 3 "$HEALTHCHECK_URL" > /dev/null
+}
+
+main
+```
+
+Make the script executable:
+
+```bash
+chmod +x ~/scripts/yt-music/backup_music.sh
+```
+
+Finally, add the script to your cron jobs. Because we store music in your home directory, run the regular user crontab without `sudo` so that your user owns the files:
+
+```bash
+crontab -e
+```
+
+Add this line to run the script every Sunday at 10:00 AM:
+
+```text
+0 10 * * 0 /home/imad/scripts/yt-music/backup_music.sh
+```
+
+You can always check your local logs by looking at the file generated in the project folder:
+
+```bash
+cat ~/scripts/yt-music/download.log
+```
