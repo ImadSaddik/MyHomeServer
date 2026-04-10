@@ -2207,3 +2207,122 @@ Add this line so it runs automatically every day at 10:00 PM:
 ```text
 0 22 * * * /opt/minecraft/backup.sh
 ```
+
+### Minecraft dashboard
+
+The dashboard allows users on the local network to start and stop the Minecraft server from a web browser, see how many people are connected, and track the server uptime.
+
+Because it needs direct access to the `screen` session running on the host machine, this application runs natively rather than in a Docker container. The backend is powered by [FastAPI](https://fastapi.tiangolo.com/) (managed by `uv`), and the frontend is built with [Vue.js](https://vuejs.org/).
+
+The source code and built files live in `/opt/minecraft/dashboard`.
+
+#### Systemd backend service
+
+To keep the FastAPI backend running in the background and ensure it starts automatically when the mini PC boots up, we use a systemd service. 
+
+Create the service file:
+
+```bash
+sudo nano /etc/systemd/system/minecraft-dashboard-api.service
+```
+
+Paste the following configuration. This tells systemd to run the API using the `uv` tool we installed earlier, binding it to the local loopback address on port `8000`:
+
+```ini
+[Unit]
+Description=Minecraft dashboard API
+After=network.target
+
+[Service]
+User=imad
+WorkingDirectory=/opt/minecraft/dashboard/backend
+ExecStart=/home/imad/.local/bin/uv run uvicorn main:app --host 127.0.0.1 --port 8000
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Reload the systemd daemon to recognize the new file, then enable and start the service simultaneously:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now minecraft-dashboard-api.service
+```
+
+#### Building the Vue.js frontend
+
+Before Nginx can serve the frontend, you need to compile the Vue.js source code into static files. Whenever you make changes to the Vue components or API logic, you must run this build process again to see the changes.
+
+Navigate to the frontend directory:
+
+```bash
+cd /opt/minecraft/dashboard/frontend
+```
+
+Install the dependencies and build the project using `pnpm`:
+
+```bash
+pnpm install
+pnpm run build
+```
+
+This command will bundle your code and generate a `dist/` folder containing the compiled HTML, CSS, and JavaScript files.
+
+#### Nginx frontend and reverse proxy
+
+With the frontend compiled, we use Nginx to serve the static files from the `dist/` directory and route API requests to the FastAPI backend.
+
+Create the Nginx site configuration:
+
+```bash
+sudo nano /etc/nginx/sites-available/minecraft-dashboard
+```
+
+Paste the following configuration. It listens on port `8080`, serves the frontend files, and proxies any request starting with `/api/` to the systemd service running on port `8000`:
+
+```nginx
+server {
+    listen 8080;
+    server_name _;
+
+    root /opt/minecraft/dashboard/frontend/dist;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+Enable the new site by creating a symbolic link from the `sites-available` directory to the `sites-enabled` directory:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/minecraft-dashboard /etc/nginx/sites-enabled/
+```
+
+Next, remove the default Nginx welcome page:
+
+```bash
+sudo rm /etc/nginx/sites-enabled/default
+```
+
+Before restarting the service, test your new Nginx configuration to ensure there are no syntax errors:
+
+```bash
+sudo nginx -t
+```
+
+If the test is successful and reports no errors, restart the Nginx service to apply the changes:
+
+```bash
+sudo systemctl restart nginx
+```
+
+You can now access the dashboard by visiting [http://192.168.1.14:8080/](http://192.168.1.14:8080/).
