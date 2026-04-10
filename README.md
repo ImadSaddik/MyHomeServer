@@ -2326,3 +2326,77 @@ sudo systemctl reload nginx
 ```
 
 You can now access the dashboard by visiting [http://192.168.1.14:8080/](http://192.168.1.14:8080/).
+
+### Automatic shutdown and boot
+
+To save electricity, the mini PC is scheduled to automatically sleep at night and wake up the next morning. Before going to sleep, it safely shuts down specific services to prevent data corruption.
+
+First, go to your Healthchecks dashboard and create a new check scheduled to run daily at 11:00 PM (`0 23 * * *`). Copy the unique Ping URL it generates.
+
+<!-- TODO: add images -->
+
+Create the shutdown script:
+
+```bash
+sudo nano /usr/local/bin/nightly_sleep.sh
+```
+
+Paste the following bash script. It cleanly shuts down the Minecraft server, pings Healthchecks to report success, and then uses `rtcwake` to suspend the machine to memory (`-m off`) and schedules the hardware clock to wake the system up `28800` seconds (8 hours) later.
+
+Make sure to replace `your-uuid-here` with your actual Healthchecks UUID:
+
+```bash
+#!/bin/bash
+set -e
+
+MINECRAFT_STOP_SCRIPT="/opt/minecraft/server/stop.sh"
+HEALTHCHECK_URL="http://192.168.1.14:6969/ping/your-uuid-here"
+
+main() {
+    echo "Starting nightly shutdown sequence"
+    ping_healthcheck_start
+    stop_all_projects
+    sleep_system
+}
+
+ping_healthcheck_start() {
+    curl -fsS --retry 3 "$HEALTHCHECK_URL/start" > /dev/null
+}
+
+stop_all_projects() {
+    stop_minecraft
+}
+
+stop_minecraft() {
+    if [ -f "$MINECRAFT_STOP_SCRIPT" ]; then
+        echo "Calling Minecraft shutdown script"
+        bash "$MINECRAFT_STOP_SCRIPT"
+    fi
+}
+
+sleep_system() {
+    echo "All projects stopped safely. Goodnight!"
+    curl -fsS --retry 3 "$HEALTHCHECK_URL" > /dev/null
+    /usr/sbin/rtcwake -m off -s 28800 # 8h
+}
+
+main
+```
+
+Make the script executable:
+
+```bash
+sudo chmod +x /usr/local/bin/nightly_sleep.sh
+```
+
+Because `rtcwake` interacts directly with the motherboard hardware clock, this script must be run as root. Open the root crontab:
+
+```bash
+sudo crontab -e
+```
+
+Add this line to run the script every night at 11:00 PM (`0 23 * * *`). It will log its output to `/var/log/nightly_sleep.log` so you can verify it ran successfully:
+
+```text
+0 23 * * * /usr/local/bin/nightly_sleep.sh >> /var/log/nightly_sleep.log 2>&1
+```
