@@ -2174,8 +2174,8 @@ ping_healthcheck_start() {
 }
 
 create_backup() {
-    # We only backup the world folders, skipping the heavy .jar and mod files
-    tar -czf "$BACKUP_FILE" -C "$SERVER_DIR" world world_nether world_the_end
+    # We only backup the world folder, which contains DIM-1 and DIM1 in Fabric
+    tar -czf "$BACKUP_FILE" -C "$SERVER_DIR" world
 }
 
 clean_old_backups() {
