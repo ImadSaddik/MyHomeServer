@@ -2011,3 +2011,199 @@ Add this single line to run the wrapper script every night at 9:00 PM:
 ```text
 0 21 * * * /home/imad/docker-projects/planka/backup/run_backup.sh
 ```
+
+### Minecraft server
+
+We use [Fabric](https://fabricmc.net/) to host a lightweight, modded Minecraft server directly on the mini PC. 
+
+First, install the required dependencies. The server requires `Java 21` to run. You also need `screen` to run the server in the background and `unzip` for archive extraction:
+
+```bash
+sudo nala install openjdk-21-jre-headless screen unzip -y
+```
+
+Next, create the server directories. Because the `/opt/` directory is owned by the root system, we need to create the folders using `sudo` and then change the ownership to our main user (`imad`). This prevents permission errors later when our automated scripts and dashboard try to manage the files.
+
+```bash
+sudo mkdir -p /opt/minecraft/server
+sudo mkdir -p /opt/minecraft/backups
+sudo chown -R imad:imad /opt/minecraft
+```
+
+Now, navigate to the server folder and download the [Fabric installer](https://fabricmc.net/use/installer/):
+
+```bash
+cd /opt/minecraft/server
+curl -o fabric-installer.jar https://maven.fabricmc.net/net/fabricmc/fabric-installer/1.1.1/fabric-installer-1.1.1.jar
+```
+
+> [!NOTE]
+> The version `1.1.1` of the installer is the latest at the time of writing, but you can check for newer versions on the [official Maven repository](https://maven.fabricmc.net/net/fabricmc/fabric-installer/) and update the URL accordingly.
+
+Run the installer via the command line to generate the server files for Minecraft `1.21.11` and Fabric loader `0.18.4`. This will automatically download the necessary core `.jar` files:
+
+```bash
+java -jar fabric-installer.jar server -mcversion 1.21.11 -loader 0.18.4 -downloadMinecraft
+```
+
+> [!NOTE]
+> You can change the `-mcversion` and `-loader` parameters to install different versions of Minecraft and Fabric.
+
+Clean up the folder by removing the installer:
+
+```bash
+rm fabric-installer.jar
+```
+
+#### Accepting the EULA
+
+Before the server can fully start, you must accept the [Minecraft End User License Agreement (EULA)](https://www.minecraft.net/en-us/eula). Run the server once to generate the necessary files. It will intentionally fail and create a `eula.txt` file:
+
+```bash
+java -jar fabric-server-launch.jar nogui
+```
+
+Open the file, or use this command to automatically accept the agreement:
+
+```bash
+echo "eula=true" > eula.txt
+```
+
+#### Start and stop scripts
+
+We need to create scripts to easily start and stop the server in the background using `screen`. 
+
+Create the start script:
+
+```bash
+nano start.sh
+```
+
+Paste the following code. This command creates a detached screen session named `mc-server` and allocates 4GB of RAM to the Java process:
+
+```bash
+#!/bin/bash
+screen -dmS mc-server java -Xms4G -Xmx4G -jar fabric-server-launch.jar nogui
+```
+
+Create the stop script:
+
+```bash
+nano stop.sh
+```
+
+Paste the following code. Instead of killing the process abruptly, this script sends the graceful `stop` command directly into the running screen session:
+
+```bash
+#!/bin/bash
+screen -S mc-server -X stuff "stop$(printf \\r)"
+```
+
+Make both scripts executable:
+
+```bash
+chmod +x start.sh stop.sh
+```
+
+You can now start the server by running `/opt/minecraft/server/start.sh`.
+
+#### Server mods
+
+Fabric requires mods to be placed in the `mods` folder inside the server directory. 
+
+```bash
+mkdir /opt/minecraft/server/mods
+```
+
+You must download the correct Fabric versions of the mods and place them in this folder. 
+
+> [!WARNING]  
+> Do not place client-side mods like `JourneyMap` or `Punchy` in this folder, or the headless server will crash. 
+
+Here are some core server mods I installed:
+
+- [Fabric API](https://www.curseforge.com/minecraft/mc-mods/fabric-api): The core library required by almost all Fabric mods.
+- [Balm](https://www.curseforge.com/minecraft/mc-mods/balm): A required dependency library for Waystones.
+- [Waystones](https://www.curseforge.com/minecraft/mc-mods/waystones): Allows players to teleport between activated monuments.
+- [True Ending](https://www.curseforge.com/minecraft/mc-mods/true-ending): Overhauls the Ender Dragon fight.
+- [Just Enough Items (JEI)](https://www.curseforge.com/minecraft/mc-mods/jei): Required on the server for Minecraft 1.21.2 and newer to sync crafting recipes to the players.
+
+#### Automated backups
+
+To prevent data loss, we will schedule a script to back up the world files every night. 
+
+First, go to your Healthchecks dashboard, create a new check scheduled for 10:00 PM (`0 22 * * *`), and copy the unique Ping URL.
+
+<!-- // TODO: Healthchecks dashboard showing the new Minecraft backup check and the Ping URL -->
+
+Create the backup script:
+
+```bash
+nano /opt/minecraft/backup.sh
+```
+
+Paste the following code, ensuring you replace the `HEALTHCHECK_URL` with your new UUID:
+
+```bash
+#!/bin/bash
+set -e
+
+main() {
+    setup_variables
+    create_directory
+    ping_healthcheck_start
+    create_backup
+    clean_old_backups
+    ping_healthcheck_success
+}
+
+setup_variables() {
+    export BACKUP_DIR="/opt/minecraft/backups"
+    export SERVER_DIR="/opt/minecraft/server"
+    export TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
+    export BACKUP_FILE="$BACKUP_DIR/world_backup_$TIMESTAMP.tar.gz"
+    export HEALTHCHECK_URL="http://192.168.1.14:6969/ping/your-uuid-here"
+}
+
+create_directory() {
+    mkdir -p "$BACKUP_DIR"
+}
+
+ping_healthcheck_start() {
+    curl -fsS --retry 3 "$HEALTHCHECK_URL/start" > /dev/null
+}
+
+create_backup() {
+    # We only backup the world folders, skipping the heavy .jar and mod files
+    tar -czf "$BACKUP_FILE" -C "$SERVER_DIR" world world_nether world_the_end
+}
+
+clean_old_backups() {
+    # Delete backups older than 7 days to save SSD space
+    find "$BACKUP_DIR" -type f -name "world_backup_*.tar.gz" -mtime +7 -delete || true
+}
+
+ping_healthcheck_success() {
+    curl -fsS --retry 3 "$HEALTHCHECK_URL" > /dev/null
+}
+
+main
+```
+
+Make the script executable:
+
+```bash
+chmod +x /opt/minecraft/backup.sh
+```
+
+Add it to your user crontab:
+
+```bash
+crontab -e
+```
+
+Add this line so it runs automatically every day at 10:00 PM:
+
+```text
+0 22 * * * /opt/minecraft/backup.sh
+```
