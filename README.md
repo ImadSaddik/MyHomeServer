@@ -1934,6 +1934,18 @@ DOCKER_CONTAINER_POSTGRES="planka-postgres"
 DOCKER_CONTAINER_PLANKA="planka"
 ```
 
+While you have the file open, we must fix a bug in the official script. By default, Docker runs the backup container as the root user, which locks the temporary files and causes our wrapper script to fail during cleanup.
+
+Find the line that says `Exporting data volume` and add `--user $(id -u):$(id -g)` to the docker run command. It should look exactly like this:
+
+```bash
+echo -n "Exporting data volume ... "
+docker run --rm --user $(id -u):$(id -g) --volumes-from "$DOCKER_CONTAINER_PLANKA" -v "$BACKUP_TEMP:/backup" node:22-alpine cp -r /app/data /backup/data
+echo "Success!"
+```
+
+By passing `--user $(id -u):$(id -g)`, Docker forces the temporary Alpine container to run as you instead of its default `root` user. This guarantees that all the exported backup files and temporary folders belong to your user account, permanently preventing those `Permission denied` crashes when your wrapper script tries to delete them at the end of the run.
+
 Save and exit the file. Now, create your wrapper script to automate the process, clean up old files, and ping Healthchecks in the correct order:
 
 ```bash
