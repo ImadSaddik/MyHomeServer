@@ -2319,10 +2319,10 @@ Before restarting the service, test your new Nginx configuration to ensure there
 sudo nginx -t
 ```
 
-If the test is successful and reports no errors, restart the Nginx service to apply the changes:
+If the test is successful and reports no errors, gracefully reload the Nginx service to apply the new configuration without dropping any active connections:
 
 ```bash
-sudo systemctl restart nginx
+sudo systemctl reload nginx
 ```
 
 You can now access the dashboard by visiting [http://192.168.1.14:8080/](http://192.168.1.14:8080/).
