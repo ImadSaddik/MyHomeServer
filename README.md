@@ -781,6 +781,126 @@ sudo reboot
 
 After the server reboots, your core system configuration is complete, and you can safely unplug the monitor and keyboard from the mini PC.
 
+### Software watchdog setup
+
+A hardware watchdog timer is a physical timer built directly into your motherboard. However, on the Lenovo ThinkCentre M720Q, Lenovo hides and locks this feature in the BIOS. Because the operating system cannot access the physical chip, you must use a software fallback called [softdog](https://tools.bitfolk.com/wiki/Softdog).
+
+`softdog` is a timer that runs inside the Linux kernel itself. The watchdog software on your Ubuntu server constantly resets this timer. If your server freezes and stops responding, the software cannot reset the timer. When the timer hits zero, the kernel forcefully restarts the system.
+
+While it cannot protect against a total low-level kernel deadlock, it is a great safety net for a headless server and will successfully recover the system from the vast majority of crashes.
+
+#### Loading the software module
+
+First, force the kernel to load the `softdog` module:
+
+```bash
+sudo modprobe softdog
+```
+
+Verify that the module is running:
+
+```bash
+lsmod | grep softdog
+```
+
+If you see `softdog` in the output, your simulated timer is ready.
+
+```text
+softdog                12288  0
+```
+
+To make sure this driver loads every time the server boots, add it to the system modules file. Open the file:
+
+```bash
+sudo nano /etc/modules
+```
+
+Add this text to the very bottom of the file:
+
+```text
+softdog
+```
+
+Save the file and exit the editor.
+
+#### Installing the watchdog daemon
+
+You need to install the software that will talk to the hardware timer. Run this command:
+
+```bash
+sudo nala install watchdog
+```
+
+#### Configuring the service
+
+Next, you need to tell the software where the simulated timer is located. Open the configuration file:
+
+```bash
+sudo nano /etc/watchdog.conf
+```
+Scroll down and find the line that says `#watchdog-device = /dev/watchdog`. Remove the `#` at the beginning to uncomment it so it looks exactly like this:
+
+```text
+watchdog-device = /dev/watchdog
+```
+Save the file and exit the editor.
+
+#### Starting the watchdog
+
+Finally, enable the service to start automatically when the server boots and start it right now:
+
+```bash
+sudo systemctl enable watchdog
+sudo systemctl start watchdog
+```
+
+Make sure that the service is running without any errors:
+
+```bash
+sudo systemctl status watchdog
+```
+
+You should see `active (running)` in the output.
+
+```text
+● watchdog.service - watchdog daemon
+     Loaded: loaded (/usr/lib/systemd/system/watchdog.service; enabled; preset: enabled)
+     Active: active (running) since Mon 2026-03-30 08:51:58 +01; 1min 21s ago
+   Main PID: 118328 (watchdog)
+      Tasks: 1 (limit: 38263)
+     Memory: 512.0K (peak: 1.0M)
+        CPU: 12ms
+     CGroup: /system.slice/watchdog.service
+             └─118328 /usr/sbin/watchdog
+```
+
+#### Testing the watchdog
+
+To validate the configuration of your automated recovery system, you should test it once. 
+
+The correct way to test the software watchdog is to abruptly kill the background daemon without giving it a chance to gracefully close its connection to the kernel. This simulates a frozen operating system. The kernel will wait for a signal that never arrives, and the system will forcefully reboot.
+
+> [!TIP]
+> This testing methodology is adapted from Paul S. Crawford's excellent guide on [Testing the Watchdog Daemon](https://www.crawford-space.co.uk/old_psc/watchdog/watchdog-testing.html). It includes important precautions to help prevent file system corruption during a forced reboot.
+
+> [!WARNING]
+> This will instantly crash your server. Your SSH session will freeze and disconnect. Save any open files before you run this command.
+
+First, prepare the system for a sudden crash by forcing a file system check on the next boot and syncing all data from the RAM to the disk:
+
+```bash
+sudo touch /forcefsck
+sudo sync
+```
+
+Next, forcefully kill the watchdog daemon:
+
+```bash
+sudo killall -STOP watchdog
+```
+
+After you run this, do not press any keys. Wait about 60 seconds. The timer will hit zero and restart your mini PC. You will be able to log back in via SSH shortly after.
+
 ## Command line utilities
 
 With the core system configured, the next step is to install the essential command line utilities. These tools make package management, version control, and general server maintenance much easier.
