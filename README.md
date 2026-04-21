@@ -2852,3 +2852,42 @@ Because Netdata was configured to use `network_mode: host` during its Docker ins
 The moment you restart the `nut-server` on port `3493`, Netdata automatically detects it. There is zero configuration needed. If you open your Netdata dashboard at `http://192.168.1.14:19999`, a new UPS section will appear in the right menu. This gives you beautiful historical charts tracking your grid input voltage, battery voltage, and load over time.
 
 <!-- TODO: show images here -->
+
+##### PeaNUT (API Bridge)
+
+Homepage cannot read the raw TCP data coming from the UPS directly. To fix this, we use a lightweight tool called [PeaNUT](https://github.com/Brandawg93/PeaNUT) to act as a bridge. It reads the raw NUT data and translates it into a clean JSON API.
+
+Create a project directory for PeaNUT:
+
+```bash
+mkdir -p ~/docker-projects/peanut/config
+cd ~/docker-projects/peanut
+nano docker-compose.yml
+```
+
+Paste the following configuration. We map it to port `8082`, and we disable authentication so Homepage can read the API without a problem on your local network:
+
+```yaml
+services:
+  peanut:
+    image: brandawg93/peanut:latest
+    container_name: PeaNUT
+    restart: unless-stopped
+    volumes:
+      - ./config:/config
+    ports:
+      - "8082:8080"
+    environment:
+      - WEB_PORT=8080
+      - AUTH_DISABLED=true
+```
+
+Start the container:
+
+```bash
+docker compose up -d
+```
+
+<!-- Add images showing how to do this -->
+
+Open your browser and go to `http://192.168.1.14:8082`. In the PeaNUT settings, add your NUT server by entering your server's IP (`192.168.1.14`), Port (`3493`), and the `admin` username and password you created earlier in `upsd.users`.
