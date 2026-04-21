@@ -2616,3 +2616,45 @@ The following devices are plugged directly into the battery backup sockets of th
 My internet router is too far away to be plugged into the UPS. Because of this, the local network switch must be on the battery backup. 
 
 During a power outage, the router will die and internet access will drop. However, the UPS will keep the switch powered on. This maintains the local network link so the mini PC can successfully send emergency shutdown signals over the network to other devices, like my gaming laptop, before shutting itself down.
+
+#### Bypassing Ubuntu security
+
+Ubuntu restricts direct access to physical USB ports for security reasons. Because the NUT service drops root privileges and runs as a restricted `nut` system user, Ubuntu will block it from reading the UPS data cable by default. You need to create a specific `udev` rule to grant permission.
+
+First, plug the UPS into the server via USB and find its hardware ID:
+
+```bash
+lsusb
+```
+
+Your output will look something like this:
+
+```text
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 001 Device 002: ID 0665:5161 Cypress Semiconductor USB to Serial
+Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+```
+
+Look for the UPS in the list. Here, it shows up as a Cypress Semiconductor chip with the ID `0665:5161`.
+
+Create a new `udev` rule file specifically for the UPS:
+
+```bash
+sudo nano /etc/udev/rules.d/99-nut-ups.rules
+```
+
+Paste the following line, replacing the Vendor and Product IDs with your exact numbers. This tells the kernel to grant the `nut` group access to this specific piece of hardware:
+
+```text
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0665", ATTRS{idProduct}=="5161", MODE="0664", GROUP="nut"
+```
+
+Save the file. To apply the new permissions without rebooting the server, reload the `udev` rules and trigger them:
+
+```bash
+sudo udevadm control --reload-rules && sudo udevadm trigger
+```
+
+> [!NOTE]
+> After running the command, physically unplug the USB cable from the server, wait 3 seconds, and plug it back in to ensure the hardware registers the new group permissions.
+```
