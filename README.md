@@ -2732,3 +2732,35 @@ Paste this block at the bottom. The `upsmon primary` tag gives this user the aut
 
 > [!IMPORTANT]
 > Make sure to replace `your_generated_password_here` with the strong password you generated. This password will be used later when we configure the UPS monitoring clients on the mini PC and gaming laptop, so do not skip this step or use a weak password.
+
+#### Configuring the automated shutdown monitor
+
+With the data server running, you need to set up the monitor ([upsmon](https://networkupstools.org/docs/man/upsmon.html)). This background watcher reads the live data and executes a safe shutdown when the backup power runs out.
+
+Open the monitor configuration file:
+
+```bash
+sudo nano /etc/nut/upsmon.conf
+```
+
+First, tell the monitor to watch the UPS using the admin credentials you just created. Add this line at the bottom, making sure the password matches:
+
+```text
+MONITOR njoy@localhost 1 admin your_generated_password_here primary
+```
+
+Next, scroll through the file to find the `SHUTDOWNCMD` line. You want to make sure it looks exactly like this:
+
+```text
+SHUTDOWNCMD "/sbin/shutdown -h +0"
+```
+
+> [!NOTE]
+> The monitor is smart. It does not shut down your mini PC the second the power flickers. Instead, it waits for the UPS to broadcast two specific status flags at the exact same time: `OB` (On Battery) and `LB` (Low Battery). Only when the battery physically drains to its safe minimum limit will it trigger the shutdown command.
+
+Save the file. Finally, enable and restart the NUT services so they start automatically whenever the server boots up:
+
+```bash
+sudo systemctl enable nut-server nut-monitor
+sudo systemctl restart nut-server nut-monitor
+```
