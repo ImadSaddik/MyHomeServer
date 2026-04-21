@@ -2891,3 +2891,47 @@ docker compose up -d
 <!-- Add images showing how to do this -->
 
 Open your browser and go to `http://192.168.1.14:8082`. In the PeaNUT settings, add your NUT server by entering your server's IP (`192.168.1.14`), Port (`3493`), and the `admin` username and password you created earlier in `upsd.users`.
+
+##### Homepage
+
+Now that PeaNUT is translating the data into an API, Homepage can read it using a custom API widget. 
+
+Open your Homepage services file:
+
+```bash
+nano ~/docker-projects/homepage/config/services.yaml
+```
+
+Add a new category for your hardware and paste this block. Ensure the indentation is exactly as shown to avoid YAML parsing errors:
+
+```yaml
+- Hardware:
+    - nJoy UPS:
+        href: http://192.168.1.14:8082
+        description: Horus Plus 2000
+        icon: ups.png
+        widget:
+          type: customapi
+          url: http://192.168.1.14:8082/api/v1/devices/njoy
+          mappings:
+            - field: battery.charge
+              label: Battery
+              format: percent
+            - field: ups.load
+              label: Load
+              format: percent
+            - field: ups.status
+              label: Status
+              format: text
+              remap:
+                - value: OL
+                  to: Online
+                - value: OB
+                  to: On Battery
+                - value: LB
+                  to: Low Battery
+                - any: true
+                  to: Unknown
+```
+
+Save the file. Homepage updates automatically. If you refresh your browser at `http://192.168.1.14:3000`, you will see a live battery percentage, load percentage, and the current connection status.
