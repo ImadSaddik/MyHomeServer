@@ -2749,6 +2749,54 @@ Paste this block at the bottom. The `upsmon primary` tag gives this user the aut
 > [!IMPORTANT]
 > Make sure to replace `your_generated_password_here` with the strong password you generated. This password will be used later when we configure the UPS monitoring clients on the mini PC and gaming laptop, so do not skip this step or use a weak password.
 
+#### Verifying the data server
+
+With the configuration files updated, restart the server daemon to apply the changes and start broadcasting:
+
+```bash
+sudo systemctl restart nut-server
+```
+
+To verify that the server is successfully talking to your UPS, use the client command to request the live metrics:
+
+```bash
+upsc njoy
+```
+
+If everything is configured correctly, your terminal will output a list of data points, including your current battery voltage and the UPS status.
+
+```text
+Init SSL without certificate database
+battery.voltage: 27.18
+device.type: ups
+driver.debug: 0
+driver.flag.allow_killpower: 0
+driver.name: nutdrv_qx
+driver.parameter.pollfreq: 30
+driver.parameter.pollinterval: 2
+driver.parameter.port: auto
+driver.parameter.productid: 5161
+driver.parameter.synchronous: auto
+driver.parameter.vendorid: 0665
+driver.state: quiet
+driver.version: 2.8.1
+driver.version.data: Voltronic-QS-Hex 0.10
+driver.version.internal: 0.36
+driver.version.usb: libusb-1.0.27 (API: 0x100010a)
+input.voltage: 232.9
+output.frequency: 50.9
+output.voltage: 232.9
+ups.beeper.status: enabled
+ups.delay.shutdown: 30
+ups.delay.start: 180
+ups.firmware.aux: PM-P
+ups.load: 17
+ups.productid: 5161
+ups.status: OL
+ups.type: offline / line interactive
+ups.vendorid: 0665
+```
+
 #### Configuring the automated shutdown monitor
 
 With the data server running, you need to set up the monitor ([upsmon](https://networkupstools.org/docs/man/upsmon.html)). This background watcher reads the live data and executes a safe shutdown when the backup power runs out.
