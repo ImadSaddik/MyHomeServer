@@ -2657,4 +2657,78 @@ sudo udevadm control --reload-rules && sudo udevadm trigger
 
 > [!NOTE]
 > After running the command, physically unplug the USB cable from the server, wait 3 seconds, and plug it back in to ensure the hardware registers the new group permissions.
+
+#### Configuring the NUT data server
+
+The NUT architecture is split into layers. The driver physically talks to the UPS, and the [data server (upsd)](https://networkupstools.org/docs/man/upsd.html) reads from that driver to share the metrics over the network.
+
+First, install the Network UPS Tools package:
+
+```bash
+sudo nala install nut -y
 ```
+
+##### Connecting the driver
+
+You need to tell NUT exactly which driver to use and what hardware IDs to look for. Open the UPS definition file:
+
+```bash
+sudo nano /etc/nut/ups.conf
+```
+
+Scroll to the bottom and paste the following block. The [nutdrv_qx](https://networkupstools.org/docs/man/nutdrv_qx.html) driver handles the Megatec Qx protocol. This is the standard communication protocol used by nJoy. It natively supports the Cypress chip inside the UPS:
+
+```text
+[njoy]
+    driver = nutdrv_qx
+    port = auto
+    desc = "nJoy Horus Plus 2000"
+    vendorid = "0665"
+    productid = "5161"
+```
+
+> [!NOTE]
+> Do not forget to change the `vendorid` and `productid` values to match the hardware ID you found with `lsusb`. In `desc`, put the name of your UPS so it is easily identifiable in the network.
+
+##### Opening the network gates
+
+By default, the [UPS data server](https://networkupstools.org/docs/man/upsd.conf.html) only listens to itself (`localhost`). Because Homepage runs inside a Docker network and the gaming laptop will connect over the local network, you must tell the server to accept external requests.
+
+Open the main server configuration:
+
+```bash
+sudo nano /etc/nut/upsd.conf
+```
+
+Add this line to the bottom of the file to open the default NUT port (3493) to your local network:
+
+```text
+LISTEN 0.0.0.0 3493
+```
+
+##### Setting up authentication
+
+Finally, create a secure user account. This prevents unauthorized devices on your network from reading your power metrics or triggering fake shutdown commands. 
+
+First, generate a strong, random password in your terminal:
+
+```bash
+openssl rand -hex 16
+```
+
+Copy the output and keep it somewhere safe. Now, open the user file:
+
+```bash
+sudo nano /etc/nut/upsd.users
+```
+
+Paste this block at the bottom. The `upsmon primary` tag gives this user the authority to manage emergency shutdowns:
+
+```text
+[admin]
+    password = your_generated_password_here
+    upsmon primary
+```
+
+> [!IMPORTANT]
+> Make sure to replace `your_generated_password_here` with the strong password you generated. This password will be used later when we configure the UPS monitoring clients on the mini PC and gaming laptop, so do not skip this step or use a weak password.
