@@ -2595,3 +2595,24 @@ Add this line to run the script every night at 11:00 PM (`0 23 * * *`). It will 
 ```text
 0 23 * * * /usr/local/bin/nightly_sleep.sh >> /var/log/nightly_sleep.log 2>&1
 ```
+
+### Uninterruptible power supply setup
+
+To protect the homelab from grid failures and data corruption, the infrastructure is backed by an [nJoy Horus Plus 2000 UPS](https://www.njoy.global/product/horus-plus-2000/PWUP-LI200H1-AZ01B). The end goal is to use [NUT (Network UPS Tools)](https://networkupstools.org/) to continuously monitor the battery state and automatically trigger a graceful shutdown of all connected machines before the backup power completely drains.
+
+#### Hardware and network preparation
+
+For the automated shutdown sequence to work reliably across multiple machines, both the power and network wiring must be set up intentionally. 
+
+The following devices are plugged directly into the battery backup sockets of the UPS:
+
+- Lenovo mini PC (the main server and UPS manager)
+- Asus gaming laptop
+- Local network switch
+
+<!-- TODO: add this later -->
+![Diagram showing the power and network wiring topology of the UPS, mini PC, laptop, and switch](./images/ups_topology.png)
+
+My internet router is too far away to be plugged into the UPS. Because of this, the local network switch must be on the battery backup. 
+
+During a power outage, the router will die and internet access will drop. However, the UPS will keep the switch powered on. This maintains the local network link so the mini PC can successfully send emergency shutdown signals over the network to other devices, like my gaming laptop, before shutting itself down.
