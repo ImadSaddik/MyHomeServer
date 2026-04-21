@@ -2840,3 +2840,15 @@ You should see a line that mentions `UPS: njoy@localhost (primary)` in the outpu
 ```text
 Apr 21 19:53:05 saddik-server nut-monitor[746774]: UPS: njoy@localhost (primary) (power value 1)
 ```
+
+#### Dashboard integrations
+
+With the UPS data broadcasting over the local network, you can easily plug these metrics into your existing monitoring tools to get both live overviews and historical data.
+
+##### Netdata
+
+Because Netdata was configured to use `network_mode: host` during its Docker installation, it has direct access to the mini PC's local ports. Netdata has a built-in auto-discovery engine that constantly scans for known services.
+
+The moment you restart the `nut-server` on port `3493`, Netdata automatically detects it. There is zero configuration needed. If you open your Netdata dashboard at `http://192.168.1.14:19999`, a new UPS section will appear in the right menu. This gives you beautiful historical charts tracking your grid input voltage, battery voltage, and load over time.
+
+<!-- TODO: show images here -->
