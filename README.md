@@ -2668,6 +2668,22 @@ First, install the Network UPS Tools package:
 sudo nala install nut -y
 ```
 
+##### Setting the server mode
+
+Because this mini PC will broadcast the UPS data to Docker containers (Homepage, Netdata) and other devices on the network, it must be configured as a network server.
+
+Open the main mode configuration file:
+
+```bash
+sudo nano /etc/nut/nut.conf
+```
+
+Find the `MODE` line at the bottom and change it to `netserver`:
+
+```text
+MODE=netserver
+```
+
 ##### Connecting the driver
 
 You need to tell NUT exactly which driver to use and what hardware IDs to look for. Open the UPS definition file:
