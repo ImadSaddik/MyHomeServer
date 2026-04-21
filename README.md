@@ -2828,3 +2828,15 @@ Save the file. Finally, enable and restart the NUT services so they start automa
 sudo systemctl enable nut-server nut-monitor
 sudo systemctl restart nut-server nut-monitor
 ```
+
+You can confirm that the monitor is running and connected to the UPS by checking its status:
+
+```bash
+sudo systemctl status nut-monitor
+```
+
+You should see a line that mentions `UPS: njoy@localhost (primary)` in the output, indicating a successful connection.
+
+```text
+Apr 21 19:53:05 saddik-server nut-monitor[746774]: UPS: njoy@localhost (primary) (power value 1)
+```
