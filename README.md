@@ -82,6 +82,15 @@ My goal with this documentation is to make it easier for myself to remember how 
     - [Building the Vue.js frontend](#building-the-vuejs-frontend)
     - [Nginx frontend and reverse proxy](#nginx-frontend-and-reverse-proxy)
   - [Automatic shutdown and boot](#automatic-shutdown-and-boot)
+  - [Uninterruptible power supply setup](#uninterruptible-power-supply-setup)
+    - [Hardware and network preparation](#hardware-and-network-preparation)
+    - [Bypassing Ubuntu security](#bypassing-ubuntu-security)
+    - [Configuring the NUT data server](#configuring-the-nut-data-server)
+    - [Verifying the data server](#verifying-the-data-server)
+    - [Configuring the automated shutdown monitor](#configuring-the-automated-shutdown-monitor)
+    - [Dashboard integrations](#dashboard-integrations)
+    - [Secondary monitor configuration (gaming laptop)](#secondary-monitor-configuration-gaming-laptop)
+    - [Testing the setup](#testing-the-setup)
 
 ## Hardware specifications and cost
 
