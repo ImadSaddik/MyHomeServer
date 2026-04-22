@@ -3033,3 +3033,38 @@ sudo systemctl restart nut-monitor
 
 Now, if the UPS battery hits a critical level, the mini PC will send a signal to your gaming laptop to shut down safely before the mini PC shuts itself down.
 
+#### Testing the setup
+
+It is important to test the shutdown sequence to make sure everything works before a real power outage happens. You can test just the network signaling, or you can test the entire system by simulating a blackout.
+
+> [!WARNING]
+> Both of these tests will shut down your computers. Save all your work before proceeding.
+
+##### Software test
+
+This test verifies that the mini PC can successfully send the emergency shutdown signal over the network to the gaming laptop, and that both machines handle the command correctly. This method ignores the battery level and forces the shutdown immediately.
+
+On your mini PC, trigger the forced shutdown signal:
+
+```bash
+sudo upsmon -c fsd
+```
+
+Your other device will begin its shutdown sequence, followed by the mini PC. After you turn the mini PC back on, you must clear the emergency kill file before the NUT data server will start normally again:
+
+```bash
+sudo rm -f /etc/killpower
+sudo systemctl restart nut-server
+```
+
+##### Real world test
+
+This is the complete test. While the software test just sends the final shutdown command, this test verifies that the UPS correctly detects the power loss, monitors the battery drain, and automatically triggers the alert when it reaches the critical low state.
+
+Follow these steps to simulate a blackout:
+
+1. Physically unplug the UPS from the wall socket.
+2. The UPS will start beeping. Your Homepage and PeaNUT dashboards will update to show the system is on battery.
+3. Let the battery drain. 
+4. Once the battery voltage drops to the `21.0V` critical limit we configured earlier, the UPS will flag a low battery state.
+5. The mini PC will detect this state, broadcast the shutdown signal to the laptop over the network switch, and both machines will power off safely.
