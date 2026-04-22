@@ -2935,3 +2935,51 @@ Add a new category for your hardware and paste this block. Ensure the indentatio
 ```
 
 Save the file. Homepage updates automatically. If you refresh your browser at `http://192.168.1.14:3000`, you will see a live battery percentage, load percentage, and the current connection status.
+
+##### Fixing missing battery percentages
+
+When you open PeaNUT or Homepage, you might see **N/A** or **NaN%** instead of a battery percentage. This happens because many line-interactive UPS units do not calculate their own battery percentage. They only report their raw internal voltage to the server.
+
+To fix this, you can force the `nutdrv_qx` driver to estimate the battery charge by telling it the physical voltage limits of the batteries. 
+
+The Horus Plus 2000 uses a 24-volt internal system (two 12V lead-acid batteries). A healthy 24V system reaches a maximum of about 27.4V when floating at 100%, and is considered completely dead around 21.0V.
+
+Open the UPS configuration file:
+
+```bash
+sudo nano /etc/nut/ups.conf
+```
+
+Add the `default.battery.voltage.high` and `low` limits to your `[njoy]` block so it looks like this:
+
+```text
+[njoy]
+    driver = nutdrv_qx
+    port = auto
+    desc = "nJoy Horus Plus 2000"
+    vendorid = "0665"
+    productid = "5161"
+    default.battery.voltage.high = 27.4
+    default.battery.voltage.low = 21.0
+```
+
+Save the file and exit. Because you added new hardware variables, you must tell NUT to rebuild its background services. 
+
+> [!WARNING]
+> Do not try to run `sudo upsdrvsvcctl restart`. This wrapper script does not have a restart command and will fail. If you just stop and start the driver, you will get a `Driver not connected` error because the service definitions are out of sync.
+
+Run these three commands in this exact order to safely resync the configuration, start the driver, and restart the data server:
+
+```bash
+sudo upsdrvsvcctl resync
+sudo upsdrvsvcctl start
+sudo systemctl restart nut-server
+```
+
+You can verify that the driver is now successfully calculating the math by running this command:
+
+```bash
+upsc njoy | grep battery.charge
+```
+
+It should return a value like `battery.charge: 97`. Once the terminal confirms the percentage exists, Homepage and PeaNUT will automatically drop the "N/A" and display the correct percentage on their next refresh.
