@@ -2980,3 +2980,56 @@ upsc njoy | grep battery.charge
 ```
 
 It should return a value like `battery.charge: 97`. Once the terminal confirms the percentage exists, Homepage and PeaNUT will automatically drop the "N/A" and display the correct percentage on their next refresh.
+
+#### Secondary monitor configuration (gaming laptop)
+
+Since my gaming laptop is plugged into the UPS and connected to the same switch, I configured it to listen to the mini PC and shut down automatically during a blackout.
+
+On my gaming laptop, I installed the NUT client:
+
+```bash
+sudo nala install nut-client -y
+```
+
+Open the mode configuration file:
+
+```bash
+sudo nano /etc/nut/nut.conf
+```
+
+Change the mode to `netclient` because this machine will only listen for data over the network:
+
+```text
+MODE=netclient
+```
+
+Next, open the monitor configuration file:
+
+```bash
+sudo nano /etc/nut/upsmon.conf
+```
+
+Add the `MONITOR` line at the bottom. Use the mini PC's static IP and the `secondary` tag instead of primary:
+
+```text
+MONITOR njoy@192.168.1.14 1 admin your_generated_password_here secondary
+```
+
+> [!NOTE]
+> Make sure to replace `your_generated_password_here` and `192.168.1.14` with your specific password and the mini PC's IP address.
+
+Make sure the `SHUTDOWNCMD` line is uncommented and looks like this:
+
+```text
+SHUTDOWNCMD "/sbin/shutdown -h +0"
+```
+
+Save the file and restart the monitor service on the laptop:
+
+```bash
+sudo systemctl enable nut-monitor
+sudo systemctl restart nut-monitor
+```
+
+Now, if the UPS battery hits a critical level, the mini PC will send a signal to your gaming laptop to shut down safely before the mini PC shuts itself down.
+
