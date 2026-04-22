@@ -2965,9 +2965,6 @@ Add the `default.battery.voltage.high` and `low` limits to your `[njoy]` block s
 
 Save the file and exit. Because you added new hardware variables, you must tell NUT to rebuild its background services. 
 
-> [!WARNING]
-> Do not try to run `sudo upsdrvsvcctl restart`. This wrapper script does not have a restart command and will fail. If you just stop and start the driver, you will get a `Driver not connected` error because the service definitions are out of sync.
-
 Run these three commands in this exact order to safely resync the configuration, start the driver, and restart the data server:
 
 ```bash
