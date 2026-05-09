@@ -69,6 +69,9 @@ My goal with this documentation is to make it easier for myself to remember how 
   - [Code server](#code-server)
   - [Navidrome](#navidrome)
     - [Adding Navidrome to Homepage](#adding-navidrome-to-homepage)
+  - [Wallos](#wallos)
+    - [Adding Wallos to Homepage](#adding-wallos-to-homepage)
+    - [AI-powered financial optimization](#ai-powered-financial-optimization)
 - [Native services and automation](#native-services-and-automation)
   - [Music backup](#music-backup)
   - [Planka backup](#planka-backup)
@@ -1996,6 +1999,120 @@ Add the following under your `Self-hosted services` category, pasting your newly
           token: paste_your_generated_md5_hash_here
           salt: abc123
 ```
+
+### Wallos
+
+I use Wallos to track my recurring monthly subscriptions. It is a self-hosted personal subscription tracker. It helps me manage my finances without relying on third-party spreadsheets.
+
+First, create the project directory and open the configuration file:
+
+```bash
+mkdir -p ~/docker-projects/wallos
+cd ~/docker-projects/wallos
+nano docker-compose.yml
+```
+
+Paste the following Docker Compose configuration. I use port `8282` to avoid conflicts with other services:
+
+```yaml
+services:
+  wallos:
+    image: bellamy/wallos:latest
+    container_name: wallos
+    ports:
+      - "8282:80"
+    environment:
+      - TZ=Africa/Casablanca
+    volumes:
+      - ./db:/var/www/html/db
+      - ./logos:/var/www/html/images/uploads/logos
+    restart: unless-stopped
+```
+
+To create and start the container, run:
+
+```bash
+docker compose up -d
+```
+
+You can now access the Wallos dashboard here: [http://192.168.1.14:8282](http://192.168.1.14:8282). On your first visit, you will be prompted to create an administrator account.
+
+> [!NOTE]
+> To keep the system simple and avoid external API dependencies, I do not use the `Fixer/APILayer` currency conversion service. I normalize all subscription costs to my primary currency manually during entry. This follows the principle of building lasting, independent systems.
+
+#### Adding Wallos to Homepage
+
+Let's add Wallos to the Homepage dashboard. Open `services.yaml`:
+
+```bash
+nano ~/docker-projects/homepage/config/services.yaml
+```
+
+Add the following under your `Self-hosted services` category:
+
+```yaml
+    - Wallos:
+        href: http://192.168.1.14:8282
+        description: Subscription tracker
+        icon: wallos.png
+```
+
+#### AI-powered financial optimization
+
+Wallos has a feature to analyze your subscriptions and suggest financial optimizations. To keep my financial data completely private, I integrated Wallos with a local Large Language Model ([Qwen3.6-35B-A3B](https://huggingface.co/Qwen/Qwen3.6-35B-A3B)) running on my gaming laptop via [llama-swap](https://github.com/mostlygeek/llama-swap).
+
+The ThinkCentre server (`192.168.1.14`) acts as the web host, while the gaming laptop (`192.168.1.9`) handles the heavy AI inference on its GPU.
+
+##### Configuring the firewall
+
+Let's use UFW to block all incoming traffic to the gaming laptop and allow outgoing traffic. Run the following commands on the machine hosting `llama-swap`:
+
+```bash
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+```
+
+Now, allow incoming traffic from the server's IP address to the specific port used by llama-swap (port `3647` in this case):
+
+```bash
+sudo ufw allow from 192.168.1.14 to any port 3647 proto tcp
+```
+
+Finally, enable the firewall:
+
+```bash
+sudo ufw enable
+```
+
+> [!NOTE]
+> Update the `llama-swap` port and IP address to match your actual configuration if they are different.
+
+##### Whitelisting the laptop in Wallos
+
+By default, Wallos blocks outgoing requests to private network IPs (like `192.168.x.x`) to prevent [Server-Side Request Forgery (SSRF)](https://owasp.org/www-community/attacks/Server_Side_Request_Forgery) attacks. You must whitelist the laptop's IP so Wallos knows it is a trusted machine.
+
+1. Log into the Wallos web interface as the administrator.
+2. Navigate to **Settings**, then **Admin**, then **Security Settings**.
+3. Type the following exactly: `192.168.1.9, 192.168.1.9:3647`
+4. Click Save.
+
+> [!TIP]
+> If you get an error saying "Invalid CSRF token" when trying to save, you can fix it by refreshing the page and trying again or logging out and back in to get a new token.
+
+##### Setting up the AI model
+
+With the network path clear, navigate to the AI Recommendations section in the Wallos settings and configure it to use the local OpenAI-compatible endpoint:
+
+- **Provider:** OpenAI Compatible
+- **API Key:** `sk-local` (Placeholder, as local inference does not require a real key)
+- **Base URL:** `http://192.168.1.9:3647/v1`
+- **AI Model:** `Qwen3.6-35B-A3B - LLM`
+- **Run Schedule:** Manual
+
+> [!NOTE]
+> Change the Base URL and AI Model name to match your actual llama-swap configuration if they are different.
+
+Save the settings and click on the new "Generate Recommendations" button to see AI-powered financial optimization suggestions based on your current subscriptions.
 
 ## Native services and automation
 
