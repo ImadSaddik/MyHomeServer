@@ -425,37 +425,37 @@ Reboot your server. As it starts up, press the `F12` key repeatedly to open the 
 
 Select your USB flash drive from the list. It will be called `USB HDD: USB, Partition 2`.
 
-![Select Partition 2 from the boot menu](./images/boot_menu_ventoy.jpg)
+![Select Partition 2 from the boot menu](./images/boot_menu_ventoy.png)
 
 Because the server has [Secure Boot](https://learn.microsoft.com/en-us/windows-hardware/design/device-experiences/oem-secure-boot) enabled, it will not recognize Ventoy at first. You will see a blue error screen that says [Verification failed: (0x1A) Security Violation](https://askubuntu.com/questions/1456460/verification-failed-0x1a-security-violation-while-installing-ubuntu). This is normal. 
 
-![Secure boot verification failed error](./images/secure_boot_error.jpg)
+![Secure boot verification failed error](./images/secure_boot_error.png)
 
 Press `Enter` on the OK button. This opens the [MOK](https://wiki.debian.org/SecureBoot#MOK_-_Machine_Owner_Key) management screen where we can tell the motherboard to trust Ventoy.
 
 Select `Enroll key from disk`.
 
-![Select Enroll key from disk](./images/mok_enroll_key.jpg)
+![Select Enroll key from disk](./images/mok_enroll_key.png)
 
 Select the `VTOYEFI` directory.
 
-![Select VTOYEFI](./images/mok_select_vtoyefi.jpg)
+![Select VTOYEFI](./images/mok_select_vtoyefi.png)
 
 Select the `ENROLL_THIS_KEY_IN_MOKMANAGER.cer` file.
 
-![Select the certificate file](./images/mok_select_cer.jpg)
+![Select the certificate file](./images/mok_select_cer.png)
 
 Select `Continue`.
 
-![Select Continue](./images/mok_continue.jpg)
+![Select Continue](./images/mok_continue.png)
 
 Select `Yes` to confirm you want to enroll the key.
 
-![Select Yes to enroll the key](./images/mok_confirm_yes.jpg)
+![Select Yes to enroll the key](./images/mok_confirm_yes.png)
 
 Finally, select `Reboot`.
 
-![Select Reboot](./images/mok_reboot.jpg)
+![Select Reboot](./images/mok_reboot.png)
 
 As the server restarts, press the `F12` key repeatedly again to open the boot menu. Select `USB, Partition 2` just like you did the first time. 
 
